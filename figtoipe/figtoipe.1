@@ -1,0 +1,93 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+.TH FIGTOIPE 1 "April 26, 2008"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+figtoipe \- Convert FIG figures into Ipe format
+.SH SYNOPSIS
+.B figtoipe 
+\fP[\-g] [\-p \fIpreamble\fP]
+\fIFIGfile\fP \fIXMLfile\fP
+
+.SH DESCRIPTION
+
+\fBfigtoipe\fP converts files in FIG format (as created, e.g., by
+\fBxfig\fP) to Ipe's XML format.
+
+\fBfigtoipe\fP is not complete.  The main lacking feature is the
+conversion of splines.  Arc-boxes are replaced by rectangles.  Feel
+free to improve this version!
+
+The drawing models of FIG and Ipe are somewhat different.  Ipe does
+not support depth ordering independent of grouping, pattern fill, and
+Postscript fonts.  
+
+\fBfigtoipe\fP tries to include images specified in the XFIG file. For
+JPEG pictures, it tries include the compressed image data into the XML
+file. For files not recognized as JPEG, \fBanytopnm\fP is called; its
+output is compressed and included in the XML file. Some output of
+\fBanytopnm\fP might be rejected (e.g. images larger than 5000x5000
+pixels or B&W bitmaps), or misunderstood.
+
+.SH OPTIONS
+.B \-g
+group the figure in the output XML
+.TP
+.B \-c
+tell ipe to crop PDF output to the boundingbox
+.TP
+.B \-6
+write in ipe 6 format instead of ipe 7 format
+.TP
+.B \-p \fIlatex\fP
+add \fIlatex\fP as a preamble to the generated XML file, e.g.
+.nf
+.in +.5i
+\'\\usepackage{amsmath}\'
+.in -.5i
+.fi
+
+.SH AUTHORS
+.ft CW
+.nf
+\&Otfried Cheong
+\&Alexander B\[:u]rger <acfb@users.sf.net> (image handling)
+.ft R
+.fi
+
+.SH REPORTING BUGS
+.ad l
+Please report bugs using Ipe bugzilla at
+.I "https://github.com/otfried/ipe-tools/issues"
+
+.SH SEE ALSO
+.ad l
+More information about Ipe can be found in  
+.IR "The Ipe Manual" ,
+which can be found in your Ipe installation.
+
+.SH LICENSE & WARRANTY
+.ad l
+\fBfigtoipe\fP comes with ABSOLUTELY NO WARRANTY. It is free software;
+you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later
+version.
+
+See the file \fBgpl.txt\fP accompanying the source for details.
