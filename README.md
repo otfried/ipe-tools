@@ -13,6 +13,13 @@ all SVG features (many SVG features are not supported by Ipe anyway),
 but it works for gradients.
 
 
+Matplotlib backend
+------------------
+
+Matplotlib is a Python module for scientific plotting.  With this
+backend, you can create Ipe figures directly from matplotlib.
+
+
 pdftoipe
 --------
 
