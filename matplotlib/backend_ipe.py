@@ -22,6 +22,7 @@ from __future__ import division, print_function
 import os, base64, tempfile, urllib, gzip, io, sys, codecs, re
 
 import matplotlib
+from matplotlib import rcParams
 from matplotlib._pylab_helpers import Gcf
 from matplotlib.backend_bases import RendererBase, GraphicsContextBase
 from matplotlib.backend_bases import FigureManagerBase, FigureCanvasBase
@@ -36,7 +37,13 @@ from math import sin, cos, radians
 
 from matplotlib.backends.backend_pgf import LatexManagerFactory, LatexManager, common_texification
 
+from matplotlib.rcsetup import validate_bool, validate_path_exists
+
 negative_number = re.compile(u"^\u2212([0-9]+)(\.[0-9]*)?$")
+
+rcParams.validate['ipe.textsize'] = validate_bool
+rcParams.validate['ipe.stylesheet'] = validate_path_exists
+rcParams.validate['ipe.preamble'] = lambda (s) : s
 
 # ----------------------------------------------------------------------
 # SimpleXMLWriter class
@@ -212,6 +219,13 @@ class XMLWriter:
             self.data(text)
         self.end(indent=False)
 
+    def insertSheet(self, fname):
+        self.__flush()
+        data = open(fname, "rb").read()
+        i = data.find("<ipestyle")
+        if i >= 0:
+            self.__write(data[i:].decode("utf-8"))
+
 # ----------------------------------------------------------------------
 
 class RendererIpe(RendererBase):
@@ -227,16 +241,25 @@ class RendererIpe(RendererBase):
         self.basename = basename
 
         RendererBase.__init__(self)
-        
-        self.latexManager = LatexManagerFactory.get_latex_manager()
+
+        # use same latex as Ipe (default is xelatex)
+        rcParams['pgf.texsystem'] = "pdflatex"
+        self.latexManager = None
+        if rcParams.get("ipe.textsize", False):
+            self.latexManager = LatexManagerFactory.get_latex_manager()
 
         self._start_id = self.writer.start(
             u'ipe',
             version=u"70005",
             creator="matplotlib")
-        self.writer.start(u'preamble')
-        self.writer.data(r'\usepackage{times}')
-        self.writer.end(indent=False)
+        pre = rcParams.get('ipe.preamble', "")
+        if pre <> "":
+            self.writer.start(u'preamble')
+            self.writer.data(pre)
+            self.writer.end(indent=False)
+        sheet = rcParams.get('ipe.stylesheet', "")
+        if sheet <> "":
+            self.writer.insertSheet(sheet)
         self.writer.start(u'ipestyle', name=u"opacity")
         
         for i in range(10,100,10):
@@ -405,9 +428,12 @@ class RendererIpe(RendererBase):
         return self.width, self.height
 
     def get_text_width_height_descent(self, s, prop, ismath):
-        s = common_texification(s)
-        w, h, d = self.latexManager.get_width_height_descent(s, prop)
-        return w, h, d
+        if self.latexManager:
+            s = common_texification(s)
+            w, h, d = self.latexManager.get_width_height_descent(s, prop)
+            return w, h, d
+        else:
+            return 1, 1, 1
 
     def new_gc(self):
         return GraphicsContextIpe()

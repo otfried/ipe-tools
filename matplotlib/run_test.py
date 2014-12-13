@@ -33,7 +33,6 @@ def run(form, f):
   t = open("tmp.py", "wb")
   t.write("""# %s
 import matplotlib as mpl
-mpl.rcParams['pgf.texsystem'] = "pdflatex"
 """ % f)
   if form=="ipe":
     t.write("mpl.use('module://backend_ipe')\n")

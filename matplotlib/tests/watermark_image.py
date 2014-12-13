@@ -1,11 +1,11 @@
 """
 Use a Text as a watermark
 """
-import numpy as np
-#import matplotlib
-#matplotlib.use('Agg')
 
+import numpy as np
 import matplotlib.pyplot as plt
+
+mpl.rcParams['ipe.preamble'] = r"\usepackage{times}"
 
 fig, ax = plt.subplots()
 ax.plot(np.random.rand(20), '-o', ms=20, lw=2, alpha=0.7, mfc='orange')

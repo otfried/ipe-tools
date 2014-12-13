@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+mpl.rcParams['ipe.textsize'] = True
 
 # Make some fake data.
 a = b = np.arange(0,3, .02)

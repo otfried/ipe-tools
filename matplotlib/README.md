@@ -24,6 +24,57 @@ The Ipe backend allows you to save in Ipe format:
 ```
 
 
+Options
+-------
+
+Some plots need to measure the size of text to place labels correctly
+(see the 'legend_demo' test for an example).  The Ipe backend can use
+a background Latex process to measure the dimensions of text as it
+will appear in the Ipe document.  By default this is not enabled, as
+most plots don't need it and it slows down the processing of the plot.
+
+If you want to enable text size measuring, set the matplotlib option
+'ipe.textsize' to True, for instance like this:
+
+```python
+  import matplotlib as mpl
+  matplotlib.use('module://backend_ipe')
+  import matplotlib.pyplot as plt
+  mpl.rcParams['ipe.textsize'] = True
+```
+
+(Note that the 'ipe' options are only available after the backend has
+been loaded, here caused by importing *pyplot*.)
+
+
+If you want your plot to include an Ipe stylesheet, specify this using
+the option 'ipe.stylesheet', with a full pathname.  Here is an
+example:
+
+```python
+  import matplotlib as mpl
+  matplotlib.use('module://backend_ipe')
+  import matplotlib.pyplot as plt
+  mpl.rcParams['ipe.stylesheet] = "/sw/ipe/share/ipe/7.1.6/styles/basic.isy"
+```
+
+You can set the preamble of the Ipe document using the option
+'ipe.preamble'.  This is useful, for instance, when you want to use
+font sizes that are not available with the standard fonts (the test
+"watermark_image" needs this).  You can then switch to a Postscript
+font that can be scaled to any size:
+
+```python
+  import matplotlib as mpl
+  matplotlib.use('module://backend_ipe')
+  import matplotlib.pyplot as plt
+  mpl.rcParams['ipe.preamble'] = r"""
+\usepackage{times}
+"""
+```
+
+
+
 Problems?
 ---------
 
@@ -34,18 +85,3 @@ You can find it as follows:
   import matplotlib
   print matplotlib.__version__
 ```
-
-The Ipe backend uses a background Latex process to measure the
-dimensions of text as it will appear in the Ipe document.  By default,
-it uses "xelatex", and this may not work if you do not have it
-installed or do not have all the packages it needs.  You can switch to
-using "pdflatex" (like Ipe itself does) with the following:
-
-```python
-  import matplotlib as mpl
-  mpl.rcParams['pgf.texsystem'] = "pdflatex"
-  mpl.use('module://backend_ipe')
-```
-
-(You can also set the *pgf.texsystem* parameter in your *matplotlibrc*
-file, see the matplotlib documentation.)
