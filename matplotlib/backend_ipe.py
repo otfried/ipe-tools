@@ -34,7 +34,7 @@ from xml.sax.saxutils import escape as escape_xml_text
 
 from math import sin, cos, radians
 
-from matplotlib.backends.backend_pgf import LatexManagerFactory, common_texification
+from matplotlib.backends.backend_pgf import LatexManagerFactory, LatexManager, common_texification
 
 negative_number = re.compile(u"^\u2212([0-9]+)(\.[0-9]*)?$")
 
@@ -249,6 +249,10 @@ class RendererIpe(RendererBase):
     def finalize(self):
         self.writer.close(self._start_id)
         self.writer.flush()
+        # This is necessary to avoid a spurious error
+        # caused by the atexit at the end of the PGF backend
+        LatexManager._cleanup_remaining_instances()
+        LatexManager.__del__ = lambda (self) : None
 
     def draw_path(self, gc, path, transform, rgbFace=None):
         capnames = ('butt', 'round', 'projecting')
