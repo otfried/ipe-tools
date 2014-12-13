@@ -40,7 +40,7 @@ If you want to enable text size measuring, set the matplotlib option
   import matplotlib as mpl
   matplotlib.use('module://backend_ipe')
   import matplotlib.pyplot as plt
-  mpl.rcParams['ipe.textsize'] = True
+  matplotlib.rcParams['ipe.textsize'] = True
 ```
 
 (Note that the 'ipe' options are only available after the backend has
@@ -55,7 +55,7 @@ example:
   import matplotlib as mpl
   matplotlib.use('module://backend_ipe')
   import matplotlib.pyplot as plt
-  mpl.rcParams['ipe.stylesheet] = "/sw/ipe/share/ipe/7.1.6/styles/basic.isy"
+  matplotlib.rcParams['ipe.stylesheet] = "/sw/ipe/share/ipe/7.1.6/styles/basic.isy"
 ```
 
 You can set the preamble of the Ipe document using the option
@@ -68,7 +68,7 @@ font that can be scaled to any size:
   import matplotlib as mpl
   matplotlib.use('module://backend_ipe')
   import matplotlib.pyplot as plt
-  mpl.rcParams['ipe.preamble'] = r"""
+  matplotlib.rcParams['ipe.preamble'] = r"""
 \usepackage{times}
 """
 ```
