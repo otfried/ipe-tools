@@ -1,9 +1,9 @@
 matplotlib backend
 ==================
 
-This is an Ipe backend for the Matplotlib plotting library for Python
-([matplotlib.org](http://matplotlib.org/)), written by Soyeon Baek and
-Otfried Cheong.
+This is an Ipe backend for the [Matplotlib plotting
+library](http://matplotlib.org/) for Python, written by Soyeon Baek
+and Otfried Cheong.
 
 You can create Ipe files directly from Matplotlib.
 
@@ -28,13 +28,13 @@ Options
 -------
 
 Some plots need to measure the size of text to place labels correctly
-(see the 'legend_demo' test for an example).  The Ipe backend can use
+(see the *legend_demo* test for an example).  The Ipe backend can use
 a background Latex process to measure the dimensions of text as it
 will appear in the Ipe document.  By default this is not enabled, as
 most plots don't need it and it slows down the processing of the plot.
 
 If you want to enable text size measuring, set the matplotlib option
-'ipe.textsize' to True, for instance like this:
+*ipe.textsize* to True, for instance like this:
 
 ```python
   import matplotlib
@@ -43,25 +43,26 @@ If you want to enable text size measuring, set the matplotlib option
   matplotlib.rcParams['ipe.textsize'] = True
 ```
 
-(Note that the 'ipe' options are only available after the backend has
+(Note that the *ipe* options are only available after the backend has
 been loaded, here caused by importing *pyplot*.)
 
 
 If you want your plot to include an Ipe stylesheet, specify this using
-the option 'ipe.stylesheet', with a full pathname.  Here is an
-example:
+the option *ipe.stylesheet*, with a full pathname.  (If you don't know
+where your style sheets are, use Ipe -> Help -> Show Configuration.)
+Here is an example:
 
 ```python
   import matplotlib
   matplotlib.use('module://backend_ipe')
   import matplotlib.pyplot as plt
-  matplotlib.rcParams['ipe.stylesheet] = "/sw/ipe/share/ipe/7.1.6/styles/basic.isy"
+  matplotlib.rcParams['ipe.stylesheet'] = "/sw/ipe/share/ipe/7.1.6/styles/basic.isy"
 ```
 
 You can set the preamble of the Ipe document using the option
-'ipe.preamble'.  This is useful, for instance, when you want to use
+*ipe.preamble*.  This is useful, for instance, when you want to use
 font sizes that are not available with the standard fonts (the test
-"watermark_image" needs this).  You can then switch to a Postscript
+*watermark_image* needs this).  You can then switch to a Postscript
 font that can be scaled to any size:
 
 ```python
