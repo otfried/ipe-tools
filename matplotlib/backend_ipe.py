@@ -35,7 +35,9 @@ from xml.sax.saxutils import escape as escape_xml_text
 
 from math import sin, cos, radians
 
-from matplotlib.backends.backend_pgf import LatexManagerFactory, LatexManager, common_texification
+from matplotlib.backends.backend_pgf import LatexManagerFactory, \
+    LatexManager, common_texification
+import atexit
 
 from matplotlib.rcsetup import validate_bool, validate_path_exists
 
@@ -272,10 +274,6 @@ class RendererIpe(RendererBase):
     def finalize(self):
         self.writer.close(self._start_id)
         self.writer.flush()
-        # This is necessary to avoid a spurious error
-        # caused by the atexit at the end of the PGF backend
-        LatexManager._cleanup_remaining_instances()
-        LatexManager.__del__ = lambda (self) : None
 
     def draw_path(self, gc, path, transform, rgbFace=None):
         capnames = ('butt', 'round', 'projecting')
@@ -512,5 +510,15 @@ def new_figure_manager_given_figure(num, figure):
     canvas  = FigureCanvasIpe(figure)
     manager = FigureManagerIpe(canvas, num)
     return manager
+
+# --------------------------------------------------------------------
+
+def _cleanup():
+    LatexManager._cleanup_remaining_instances()
+    # This is necessary to avoid a spurious error
+    # caused by the atexit at the end of the PGF backend
+    LatexManager.__del__ = lambda (self) : None
+
+atexit.register(_cleanup)
 
 # --------------------------------------------------------------------
