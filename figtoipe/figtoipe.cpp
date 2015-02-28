@@ -60,6 +60,9 @@
  *              + added -6 option to write in ipe 6 format
  *              + added simple_getopt function to parse options
  *              + reduce filesize for images by putting 36 bytes per line
+ * 2015/02/28 - Alexander Buerger acfb@users.sf.net
+ *              + check color array indices
+ *              + limit image filename string length in fscanf
  */
 
 #include <stdlib.h>
@@ -74,11 +77,14 @@
 #include <fstream>
 #include <algorithm>
 
-#define FIGTOIPE_VERSION "figtoipe 2009/12/05"
+#define FIGTOIPE_VERSION "figtoipe 2015/02/28"
 
 const int MEDIABOX_WIDTH = 595;
 const int MEDIABOX_HEIGHT = 842;
 bool ipe7 = true;
+
+const int NFIXEDCOLORS = 32, NUSERCOLORS = 512,
+    NCOLORS = NFIXEDCOLORS + NUSERCOLORS;
 
 // --------------------------------------------------------------------
 
@@ -142,6 +148,7 @@ public:
 private:
   bool GetLine(char *buf);
   int GetInt();
+  int GetColorInt();
   double GetDouble();
   Point GetPoint();
   void GetColor();
@@ -160,7 +167,7 @@ private:
   double iMagnification;
   double iUnitsPerPoint;
   std::vector<FigObject> iObjects;
-  unsigned int iUserColors[512];
+  unsigned int iUserColors[NUSERCOLORS];
 };
 
 // --------------------------------------------------------------------
@@ -183,6 +190,16 @@ int FigReader::GetInt()
   if( fscanf(iFig, "%d", &num) != 1 && !feof(iFig))
       fprintf(stderr, "Could not read integer value.\n");
   return num;
+}
+
+int FigReader::GetColorInt()
+{
+  int color = GetInt();
+  if( color < 0 || color >= NCOLORS ) {
+    fprintf(stderr, "Color value %d out of range.\n", color);
+    color = 0;
+  }
+  return color;
 }
 
 double FigReader::GetDouble()
@@ -283,17 +300,17 @@ bool FigReader::ReadHeader()
 // and assign depth to compound object
 int FigReader::ComputeDepth(unsigned int &i)
 {
-  if (iObjects[i].iType != 6)
-    return iObjects[i++].iDepth;
+  if (iObjects.at(i).iType != 6)
+    return iObjects.at(i++).iDepth;
   int pos = i;
   int depth = 1000;
   ++i;
-  while (iObjects[i].iType != -6) {
+  while (iObjects.at(i).iType != -6) {
     int od = ComputeDepth(i);
     if (od < depth) depth = od;
   }
-  iObjects[pos].iDepth = depth;
-  iObjects[pos].iSubtype = i;
+  iObjects.at(pos).iDepth = depth;
+  iObjects.at(pos).iSubtype = i;
   ++i;
   return depth;
 }
@@ -371,11 +388,12 @@ void FigReader::GetColor()
   int rgb = 0;
   if( fscanf(iFig," #%x", &rgb) != 1 )  // RGB string in hex
       fprintf(stderr, "Could not read rgb string.\n");
-  if( colorNum<32 || colorNum>=512+32 ) {
-      fprintf(stderr, "User color number out of range, replacing with 32.\n");
-      colorNum = 32;
+  if( colorNum<NFIXEDCOLORS || colorNum>=NCOLORS ) {
+    fprintf(stderr, "User color number %d out of range, replacing with %d.\n",
+            colorNum, NFIXEDCOLORS);
+    colorNum = NFIXEDCOLORS;
   }
-  iUserColors[colorNum - 32] = rgb;
+  iUserColors[colorNum - NFIXEDCOLORS] = rgb;
 }
 
 void FigReader::GetEllipse(FigObject &obj)
@@ -383,8 +401,8 @@ void FigReader::GetEllipse(FigObject &obj)
   obj.iSubtype = GetInt();
   obj.iLinestyle = GetInt();
   obj.iThickness = GetDouble();
-  obj.iPenColor = GetInt();
-  obj.iFillColor = GetInt();
+  obj.iPenColor = GetColorInt();
+  obj.iFillColor = GetColorInt();
   obj.iDepth = GetInt();
   obj.iPenStyle = GetInt();  // not used
   obj.iAreaFill = GetInt();
@@ -403,8 +421,8 @@ void FigReader::GetPolyline(FigObject &obj)
   obj.iSubtype = GetInt();
   obj.iLinestyle = GetInt();
   obj.iThickness = GetDouble();
-  obj.iPenColor = GetInt();
-  obj.iFillColor = GetInt();
+  obj.iPenColor = GetColorInt();
+  obj.iFillColor = GetColorInt();
   obj.iDepth = GetInt();
   obj.iPenStyle = GetInt(); // not used
   obj.iAreaFill = GetInt();
@@ -420,7 +438,7 @@ void FigReader::GetPolyline(FigObject &obj)
       int orientation;
       char image_filename[1024];
       // orientation and filename
-      if( fscanf(iFig, "%d %s", &orientation, image_filename) != 2 ) {
+      if( fscanf(iFig, "%d %1020s", &orientation, image_filename) != 2 ) {
           fprintf(stderr, "Could not read image orientation and/or filename. Exit.\n");
           exit(-1);
       }
@@ -444,8 +462,8 @@ void FigReader::GetSpline(FigObject &obj)
   obj.iSubtype = GetInt();
   obj.iLinestyle = GetInt();
   obj.iThickness = GetDouble();
-  obj.iPenColor = GetInt();
-  obj.iFillColor = GetInt();
+  obj.iPenColor = GetColorInt();
+  obj.iFillColor = GetColorInt();
   obj.iDepth = GetInt();
   obj.iPenStyle = GetInt(); // not used
   obj.iAreaFill = GetInt();
@@ -481,7 +499,7 @@ void FigReader::GetText(FigObject &obj)
 {
   obj.iSubtype = GetInt();
   obj.iThickness = 1;       // stroke
-  obj.iPenColor = GetInt();
+  obj.iPenColor = GetColorInt();
   obj.iDepth = GetInt();
   obj.iPenStyle = GetInt(); // not used
   obj.iFont = GetInt();
@@ -525,8 +543,8 @@ void FigReader::GetArc(FigObject &obj)
   obj.iSubtype = GetInt();
   obj.iLinestyle = GetInt();
   obj.iThickness = GetDouble();
-  obj.iPenColor = GetInt();
-  obj.iFillColor = GetInt();
+  obj.iPenColor = GetColorInt();
+  obj.iFillColor = GetColorInt();
   obj.iDepth = GetInt();
   obj.iPenStyle = GetInt();  // not used
   obj.iAreaFill = GetInt();
@@ -579,6 +597,7 @@ private:
 
   double X(double x);
   double Y(double y);
+  unsigned int rgbColor(int colornum);
 
 private:
   FILE *iXml;
@@ -598,17 +617,21 @@ double FigWriter::Y(double y)
   return MEDIABOX_HEIGHT - X(y);
 }
 
+unsigned int FigWriter::rgbColor(int colornum)
+{
+  if (colornum < 0 || colornum >= NCOLORS)
+    colornum = 0;
+  if (colornum < NFIXEDCOLORS)
+    return ColorTable[colornum];
+  else
+    return iUserColors[colornum - NCOLORS];
+}
+
 void FigWriter::WriteStroke(const FigObject &obj)
 {
   if (obj.iThickness == 0)  // no stroke
     return;
-  int col = obj.iPenColor;
-  if (col < 0) col = 0;     // make default black
-  unsigned int rgb;
-  if (col < 32)
-    rgb = ColorTable[col];
-  else
-    rgb = iUserColors[col - 32];
+  unsigned int rgb = rgbColor(obj.iPenColor);
   fprintf(iXml, " stroke=\"%g %g %g\"",
 	  ((rgb >> 16) & 0xff) / 255.0,
 	  ((rgb >> 8) & 0xff) / 255.0,
@@ -631,11 +654,7 @@ void FigWriter::WriteFill(const FigObject &obj)
   if (obj.iFillColor < 1) { // BLACK & DEFAULT
     fprintf(iXml, " fill=\"%g\"", 1.0 - (fill / 20.0));
   } else {
-    unsigned int rgb;
-    if (obj.iFillColor < 32)
-      rgb = ColorTable[obj.iFillColor];
-    else
-      rgb = iUserColors[obj.iFillColor - 32];
+    unsigned int rgb = rgbColor(obj.iFillColor);
     double r = ((rgb >> 16) & 0xff) / 255.0;
     double g = ((rgb >> 8) & 0xff) / 255.0;
     double b = (rgb & 0xff) / 255.0;
@@ -700,7 +719,7 @@ public:
     : iObjects(objects) { /* nothing */ }
   int operator()(int lhs, int rhs) const
   {
-    return (iObjects[lhs].iDepth > iObjects[rhs].iDepth);
+    return (iObjects.at(lhs).iDepth > iObjects.at(rhs).iDepth);
   }
 private:
   const std::vector<FigObject> &iObjects;
@@ -714,8 +733,8 @@ void FigWriter::WriteObjects(const std::vector<FigObject> &objects,
   int i = start;
   while (i < fin) {
     objs.push_back(i);
-    if (objects[i].iType == 6)
-      i = objects[i].iSubtype;  // link to END OF COMPOUND
+    if (objects.at(i).iType == 6)
+        i = objects.at(i).iSubtype;  // link to END OF COMPOUND
     ++i;
   }
   // now sort the objects
@@ -724,6 +743,8 @@ void FigWriter::WriteObjects(const std::vector<FigObject> &objects,
   // now render them
   for (unsigned int j = 0; j < objs.size(); ++j) {
     i = objs[j];
+    if (i<0 || i >= (int)objects.size())
+      continue;
     switch (objects[i].iType) {
     case 1: // ELLIPSE
       WriteEllipse(objects[i]);
@@ -895,8 +916,9 @@ std::string make_safe_filename( const std::string& filename )
     s_sf << '\'';
     for( unsigned i=0; i<filename.size(); ++i ) {
         if( filename[i]=='\'' )
-            s_sf << '\\';
-        s_sf << filename[i];
+            s_sf << "'\"'\"'";
+        else
+            s_sf << filename[i];
     }
     s_sf << '\'';
     return s_sf.str();
