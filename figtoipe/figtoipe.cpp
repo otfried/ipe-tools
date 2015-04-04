@@ -63,6 +63,8 @@
  * 2015/02/28 - Alexander Buerger acfb@users.sf.net
  *              + check color array indices
  *              + limit image filename string length in fscanf
+ *              + thanks to Jodie Cunningham <jodie.cunningham@gmail.com>
+ *                for pointing out these problems
  */
 
 #include <stdlib.h>
