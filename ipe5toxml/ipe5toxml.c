@@ -5,7 +5,7 @@
  * version 5.0) to XML format as used by Ipe 6.0.
  */
 
-#define IPE5TOXML_VERSION "ipe5toxml 2005/11/14"
+#define IPE5TOXML_VERSION "ipe5toxml 2015/04/04"
 
 #include <stdio.h>
 #include <stdlib.h>
