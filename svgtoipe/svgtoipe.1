@@ -1,0 +1,23 @@
+.TH SVGTOIPE "1" "April 2015" "Ipe" "User Commands"
+
+.SH NAME
+svgtoipe \- Convert a SVG file to Ipe 7 format
+
+.SH SYNOPSIS
+.B svgtoipe
+\fIfigure.svg [ figure.svg ]\fR
+
+.SH DESCRIPTION
+\fBsvgtoipe\fR converts a SVG file to an XML file understood by Ipe
+version 7. If the output filename is not specified, it will be derived
+either by replacing \fI.ipe\fR at the end of the input filename with
+\fI.svg\fR, or by appending \fI.ipe\fR if the input filename does not
+end with with \fI.svg\fR.
+
+Images are converted if python-imaging is available.
+
+.SH AUTHOR
+Otfried Cheong
+
+.SH "SEE ALSO"
+\fBipe\fR(1)

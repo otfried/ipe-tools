@@ -5,7 +5,7 @@
  * version 5.0) to XML format as used by Ipe 6.0.
  */
 
-#define IPE5TOXML_VERSION "ipe5toxml 2005/11/14"
+#define IPE5TOXML_VERSION "ipe5toxml 2015/04/04"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -185,6 +185,24 @@ static bool in_settings = TRUE;
 
 /******************** reading ******************************************/
 
+static void assert_n(int n_expected, int n_actual)
+{
+  if (n_expected != n_actual)  {
+    fprintf(stderr, "Fatal error: failed to parse input\n");
+    exit(9);
+  }
+  return;
+}
+
+static void assert_fgets(char* s, int size, FILE* stream)
+{
+  if (fgets(s, size, stream) != s) {
+    fprintf(stderr, "Fatal error: failed to read input\n");
+    exit(9);
+  }
+  return;
+}
+
 static char *read_next(void)
 {
   int ch2, ch1, ch;
@@ -208,7 +226,7 @@ static char *read_next(void)
   /* next word is keyword */
   
   p = linebuf;
-  while ((*p = fgetc(fh)), !isspace(*p))
+  while ((*p = fgetc(fh)), *p != EOF && (p < (linebuf + sizeof(linebuf) -1)) && !isspace(*p))
     p++;
   *p = '\0';
 
@@ -261,62 +279,62 @@ static void read_env(IpeEnvironment *ienv)
   while (TRUE) {
     wk = read_next();
     if (!strcmp(wk, "sk")) {
-      fscanf(fh, "%lf", &ienv->stroke.red);
+      assert_n(1, fscanf(fh, "%lf", &ienv->stroke.red));
       ienv->stroke.blue = ienv->stroke.green = ienv->stroke.red;
     } else if (!strcmp(wk, "fi")) {
-      fscanf(fh, "%lf", &ienv->fill.red);
+      assert_n(1, fscanf(fh, "%lf", &ienv->fill.red));
       ienv->fill.blue = ienv->fill.green = ienv->fill.red;
     } else if (!strcmp(wk, "skc")) {
-      fscanf(fh, "%lf%lf%lf",
-	     &ienv->stroke.red, &ienv->stroke.green, &ienv->stroke.blue);
+      assert_n(3, fscanf(fh, "%lf%lf%lf",
+              &ienv->stroke.red, &ienv->stroke.green, &ienv->stroke.blue));
     } else if (!strcmp(wk, "fic")) {
-      fscanf(fh, "%lf%lf%lf",
-	     &ienv->fill.red, &ienv->fill.green, &ienv->fill.blue);
+      assert_n(3, fscanf(fh, "%lf%lf%lf",
+              &ienv->fill.red, &ienv->fill.green, &ienv->fill.blue));
     } else if (!strcmp(wk, "ss")) {
-      fscanf(fh, "%hu%lf", &ienv->linestyle, &ienv->linewidth);
+      assert_n(2, fscanf(fh, "%hu%lf", &ienv->linestyle, &ienv->linewidth));
     } else if (!strcmp(wk, "ar")) {
-      fscanf(fh, "%hu%lf", &ienv->arrow, &ienv->arsize);
+      assert_n(2, fscanf(fh, "%hu%lf", &ienv->arrow, &ienv->arsize));
     } else if (!strcmp(wk, "cl")) {
       rd.closed = TRUE;
     } else if (!strcmp(wk, "f")) {
-      fscanf(fh, "%hu%lf", &ienv->font, &ienv->fontsize);
+      assert_n(2, fscanf(fh, "%hu%lf", &ienv->font, &ienv->fontsize));
     } else if (!strcmp(wk, "grid")) {
-      fscanf(fh, "%lf%lf", &ienv->gridsize, &ienv->snapangle);
+      assert_n(2, fscanf(fh, "%lf%lf", &ienv->gridsize, &ienv->snapangle));
     } else if (!strcmp(wk, "ty")) {
-      fscanf(fh, "%hu", &ienv->marktype);
+      assert_n(1, fscanf(fh, "%hu", &ienv->marktype));
     } else if (!strcmp(wk, "sz")) {
-      fscanf(fh, "%lf",  &ienv->marksize);
+      assert_n(1, fscanf(fh, "%lf",  &ienv->marksize));
     } else if (!strcmp(wk, "xy")) {
-      fscanf(fh, "%lf%lf", &x, &y);
+      assert_n(2, fscanf(fh, "%lf%lf", &x, &y));
       SETXY(rd.xy, x, y);
     } else if (!strcmp(wk, "px")) {
-      fscanf(fh, "%d%d", &rd.xbits, &rd.ybits);
+      assert_n(2, fscanf(fh, "%d%d", &rd.xbits, &rd.ybits));
     } else if (!strcmp(wk, "bb")) {
       rd.minipage = TRUE;
-      fscanf(fh, "%lf%lf", &rd.wd, &rd.ht);
+      assert_n(2, fscanf(fh, "%lf%lf", &rd.wd, &rd.ht));
       rd.dp = rd.ht;
     } else if (!strcmp(wk, "tbb")) {
       rd.minipage = FALSE;
-      fscanf(fh, "%lf%lf%lf", &rd.wd, &rd.ht, &rd.dp);
+      assert_n(2, fscanf(fh, "%lf%lf%lf", &rd.wd, &rd.ht, &rd.dp));
     } else if (!strcmp(wk, "ang")) {
-      fscanf(fh, "%lf%lf", &rd.begangle, &rd.endangle);
+      assert_n(2, fscanf(fh, "%lf%lf", &rd.begangle, &rd.endangle));
     } else if (!strcmp(wk, "r")) {
-      fscanf(fh, "%lf", &rd.radius);
+      assert_n(1, fscanf(fh, "%lf", &rd.radius));
     } else if (!strcmp(wk, "tfm")) {
       rd.ellipse = TRUE;
-      fscanf(fh, "%lf%lf%lf%lf", &rd.tfm[0], &rd.tfm[1], &rd.tfm[2], &rd.tfm[3]);
+      assert_n(4, fscanf(fh, "%lf%lf%lf%lf", &rd.tfm[0], &rd.tfm[1], &rd.tfm[2], &rd.tfm[3]));
     } else if (!strcmp(wk, "axis")) {
       ienv->axisset = TRUE;
-      fscanf(fh, "%lf%lf%lf", &x, &y, &ienv->axisdir);
+      assert_n(3, fscanf(fh, "%lf%lf%lf", &x, &y, &ienv->axisdir));
       SETXY(ienv->origin, x, y);
     } else if (!strcmp(wk, "#")) {
       /* vertices of a polyline */
       int ch;
-      fscanf(fh, "%d", &rd.n);
+      assert_n(1, fscanf(fh, "%d", &rd.n));
       rd.v = NEWARRAY(vertex, rd.n);
       rd.vtype = NEWARRAY(char, rd.n);
       for (i = 0; i < rd.n; i++ ) {
-	fscanf(fh, "%lf%lf", &x, &y);
+	assert_n(2, fscanf(fh, "%lf%lf", &x, &y));
 	SETXY(rd.v[i], x, y);
 	/* find character */
 	do {
@@ -333,7 +351,7 @@ static void read_env(IpeEnvironment *ienv)
       }
     } else if (!strcmp(wk, "s")) {
       /* get string */
-      fgets(linebuf, MAX_LINE_LENGTH, fh);
+      assert_fgets(linebuf, MAX_LINE_LENGTH, fh);
       linebuf[strlen(linebuf) - 1] = '\0';
       if (!rd.str) {
 	/* first string */
@@ -354,7 +372,7 @@ static void read_env(IpeEnvironment *ienv)
       char *p, *strbits, buf[3];
       short red, green, blue;
       
-      fscanf(fh, "%ld%d", &nwords, &mode);
+      assert_n(2, fscanf(fh, "%ld%d", &nwords, &mode));
       incolor = mode & 1;
       if (mode & 0x8) {
 	/* read RAW bitmap */
@@ -434,7 +452,7 @@ static void read_env(IpeEnvironment *ienv)
     } else {
       if (in_settings) {
 	/* unknown keyword in settings: ignore this line */
-	fgets(linebuf, MAX_LINE_LENGTH, fh);
+	assert_fgets(linebuf, MAX_LINE_LENGTH, fh);
       } else {
 	/* unknown keyword in an object: this is serious */
 	fprintf(stderr, "Illegal keyword %s in IPE file %s\n",
@@ -1068,12 +1086,16 @@ static void ipetoxml(void)
     int nlines;
     int ch;
     char *p = preamble;
-    fscanf(fh, "%d", &nlines);
+    assert_n(1, fscanf(fh, "%d", &nlines));
     /* skip to next line */
     while ((ch = fgetc(fh)) != '\n' && ch != EOF)
       ;
-    while (nlines > 0 && ch != EOF) {
+    while (nlines > 0 && ch != EOF && (p < (preamble + sizeof(preamble) - 1))) {
       ch = fgetc(fh);
+      if (ch == EOF) {
+        fprintf(stderr, "EOF while reading preamble\n");
+        exit(9);
+      }
       if (ch != '%')
 	*p++ = ch;
       if (ch == '\n')
@@ -1087,12 +1109,16 @@ static void ipetoxml(void)
     int nlines;
     int ch;
     char *p = pspreamble;
-    fscanf(fh, "%d", &nlines);
+    assert_n(1, fscanf(fh, "%d", &nlines));
     /* skip to next line */
     while ((ch = fgetc(fh)) != '\n' && ch != EOF)
       ;
-    while (nlines > 0 && ch != EOF) {
+    while (nlines > 0 && ch != EOF && (p < (pspreamble + sizeof(pspreamble) -1 ))) {
       ch = fgetc(fh);
+      if (ch == EOF) {
+        fprintf(stderr, "EOF while reading PSpreamble\n");
+        exit(9);
+      }
       *p++ = ch;
       if (ch == '\n')
 	nlines--;
@@ -1102,7 +1128,7 @@ static void ipetoxml(void)
   }
 
   if (!strcmp(wk, "Pages")) {
-    fscanf(fh, "%d", &no_pages);
+    assert_n(1, fscanf(fh, "%d", &no_pages));
   } else if (strcmp(wk, "Group")) {
     fprintf(stderr, "Not an IPE file: %s\n", ipename);
     exit(9);
@@ -1134,7 +1160,7 @@ static void ipetoxml(void)
     char *p = preamble;
     while (*p && *p != '}')
       p++;
-    if (*p) 
+    if (*p)
       p++;
     while (*p && (*p == ' ' || *p == '\n' || *p == '\r'))
       p++;
