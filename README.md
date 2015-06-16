@@ -2,7 +2,7 @@ ipe-tools
 =========
 
 These are various tools and helper programs to be used 
-with the Ipe drawing editor (http://ipe7.sf.net)
+with the Ipe drawing editor (http://ipe7.otfried.org).
 
 
 svgtoipe.py

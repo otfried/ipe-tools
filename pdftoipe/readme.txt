@@ -32,7 +32,7 @@ direct Email.
 	KAIST
 	Daejeon, South Korea
 	Email: otfried@ipe.airpost.net
-	Ipe webpage: http://ipe7.sourceforge.net
+	Ipe webpage: http://ipe.otfried.org
 
 --------------------------------------------------------------------
 

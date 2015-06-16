@@ -29,7 +29,7 @@ should then not expect a reply.
         Alexander Bürger, acfb@users.sourceforge.net
 	Otfried Cheong, otfried@ipe.airpost.net
 
-	Ipe webpage: http://ipe7.sf.net
+	Ipe webpage: http://ipe.otfried.org
 
 --------------------------------------------------------------------
 

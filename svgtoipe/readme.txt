@@ -38,11 +38,11 @@ direct Email.
 	KAIST
 	Daejeon, South Korea
 	Email: otfried@ipe.airpost.net
-	Ipe webpage: http://ipe7.sourceforge.net
+	Ipe webpage: http://ipe.otfried.org
 
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2014 Otfried Cheong
+Copyright (C) 2009-2015 Otfried Cheong
 
 svgtoipe is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
