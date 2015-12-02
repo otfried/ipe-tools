@@ -494,8 +494,10 @@ class FigureCanvasIpe(FigureCanvasBase):
 # Provide the standard names that backend.__init__ is expecting
 
 class FigureManagerIpe(FigureManagerBase):
-    pass
+    def __init__(self, *args):
+        FigureManagerBase.__init__(self, *args)
 
+FigureCanvas = FigureCanvasIpe
 FigureManager = FigureManagerIpe
 
 def new_figure_manager(num, *args, **kwargs):
