@@ -2,13 +2,14 @@
 # Run all the tests in tests subdirectory
 # and save plots in ipe and svg format
 # 
+from __future__ import division, print_function, unicode_literals
 
 import os, sys
 
 def fix_file(f):
-  data = open("tests/%s" % f, "rb").readlines()
+  data = open("tests/%s" % f, "r").readlines()
   os.rename("tests/%s" % f, "tests/%s.bak" % f)
-  out = open("tests/%s" % f, "wb")
+  out = open("tests/%s" % f, "w")
   for l in data:
     ll = l.strip()
     if ll == "import matplotlib as mpl": continue
@@ -30,13 +31,13 @@ def runall(form):
 
 def run(form, f):
   sys.stderr.write("# %s\n" % f)
-  t = open("tmp.py", "wb")
+  t = open("tmp.py", "w")
   t.write("""# %s
 import matplotlib as mpl
 """ % f)
   if form=="ipe":
     t.write("mpl.use('module://backend_ipe')\n")
-  t.write(open("tests/%s.py" % f, "rb").read())
+  t.write(open("tests/%s.py" % f, "r").read())
   t.write("plt.savefig('out/%s.%s', format='%s')\n" % (f, form, form))
   t.close()
   os.system("python tmp.py")

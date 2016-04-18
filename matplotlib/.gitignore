@@ -1,0 +1,5 @@
+__pycahce__/
+out/
+tmp.py
+*.pyc
+
