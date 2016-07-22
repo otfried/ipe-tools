@@ -17,7 +17,7 @@ Use it as an external backend from matplotlib like this:
 
 # --------------------------------------------------------------------
 
-from __future__ import division, print_function
+from __future__ import division, print_function, unicode_literals
 
 import os, base64, tempfile, urllib, gzip, io, sys, codecs, re
 
@@ -45,7 +45,7 @@ negative_number = re.compile(u"^\u2212([0-9]+)(\.[0-9]*)?$")
 
 rcParams.validate['ipe.textsize'] = validate_bool
 rcParams.validate['ipe.stylesheet'] = validate_path_exists
-rcParams.validate['ipe.preamble'] = lambda (s) : s
+rcParams.validate['ipe.preamble'] = lambda s : s
 
 # ----------------------------------------------------------------------
 # SimpleXMLWriter class
@@ -147,8 +147,7 @@ class XMLWriter:
         if attrib or extra:
             attrib = attrib.copy()
             attrib.update(extra)
-            attrib = attrib.items()
-            attrib.sort()
+            attrib = sorted(attrib.items())
             for k, v in attrib:
                 if not v == '':
                     k = escape_cdata(k)
@@ -216,7 +215,7 @@ class XMLWriter:
     # can be omitted.
 
     def element(self, tag, text=None, attrib={}, **extra):
-        apply(self.start, (tag, attrib), extra)
+        self.start(*(tag, attrib), **extra)
         if text:
             self.data(text)
         self.end(indent=False)
@@ -255,15 +254,15 @@ class RendererIpe(RendererBase):
             version=u"70005",
             creator="matplotlib")
         pre = rcParams.get('ipe.preamble', "")
-        if pre <> "":
+        if pre != "":
             self.writer.start(u'preamble')
             self.writer.data(pre)
             self.writer.end(indent=False)
         sheet = rcParams.get('ipe.stylesheet', "")
-        if sheet <> "":
+        if sheet != "":
             self.writer.insertSheet(sheet)
         self.writer.start(u'ipestyle', name=u"opacity")
-        
+
         for i in range(10,100,10):
             self.writer.element(u'opacity', name=u'%02d%%'% i, 
                                 value=u'%g'% (i/100.0))
@@ -519,7 +518,7 @@ def _cleanup():
     LatexManager._cleanup_remaining_instances()
     # This is necessary to avoid a spurious error
     # caused by the atexit at the end of the PGF backend
-    LatexManager.__del__ = lambda (self) : None
+    LatexManager.__del__ = lambda self : None
 
 atexit.register(_cleanup)
 
