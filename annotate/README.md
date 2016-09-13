@@ -25,5 +25,10 @@ python3 annotate.py doc.pdf
 
 It will create the new file `annotate-doc.ipe`.
 
+When opening `annotate-doc.ipe` using Ipe, you will need to have the
+original PDF file `doc.pdf` available for Ipe.  You either have to
+copy it into Ipe's Latex directory (e.g. `~/.ipe/latexrun`), or you
+have to set the `TEXINPUTS` environment variable.
+
 
 
