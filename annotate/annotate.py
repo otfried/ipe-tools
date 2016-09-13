@@ -19,11 +19,11 @@ def create_ipe(pdffile):
   outfile = "annotate-" + outfile + ".ipe"
   doc = pdf.PdfFileReader(pdffile)
   numPages = doc.numPages
-  out = open(outfile, "wb")
+  out = open(outfile, "w")
   out.write("""<ipe version="70205">
 <ipestyle>
 <preamble>
-\usepackage{graphicx}
+\\usepackage{graphicx}
 </preamble>
 </ipestyle>
 <ipestyle name="basic">

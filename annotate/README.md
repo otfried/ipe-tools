@@ -11,14 +11,16 @@ https://github.com/mstamy2/PyPDF2.  The easiest way to install
 *PyPDF2* is using PIP - on Linux it will suffice to say
 
 ```
-apt-get install python-pip
-pip install PyPDF2
+apt-get install python3-pip
+pip3 install PyPDF2
 ```
+
+(Or, if using Python~2, install `python-pip` and call `pip`.)
 
 Run it with a PDF file as an argument:
 
 ```
-python annotate.py doc.pdf
+python3 annotate.py doc.pdf
 ```
 
 It will create the new file `annotate-doc.ipe`.
