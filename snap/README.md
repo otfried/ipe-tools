@@ -19,7 +19,7 @@ Once you have the **snap** command on your system, you can install the
 most recent version of Ipe by saying
 
 ```
-sudo snap install ipe
+sudo snap install ipe --edge
 ```
 
 You can now start Ipe by simply saying `ipe` (which calls
@@ -45,3 +45,6 @@ To run `ipetoipe`, say
 ```
 /snap/ipe/current/bin/ipewrapper ipetoipe -pdf -export test.ipe
 ```
+
+You can of course make an alias or shell script to always call ipe
+through this wrapper.
