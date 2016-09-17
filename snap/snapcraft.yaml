@@ -1,0 +1,74 @@
+name: ipe
+version: 7.2.6
+summary: Ipe http://ipe.otfried.org/
+description: Drawing editor for creating figures in PDF or PS formats
+  Ipe supports making small figures for inclusion into LaTeX
+  documents as well as making multi-page PDF presentations
+  Ipe's main features are
+    * Entry of text as LaTeX source code. This makes it easy to enter
+      mathematical expressions, and to reuse the LaTeX-macros of the main
+      document.  In the display text is displayed as it will appear in
+      the figure.
+    * Produces pure Postscript/PDF, including the text. Ipe converts the
+      LaTeX-source to PDF or Postscript when the file is saved.
+    * It is easy to align objects with respect to each other (for
+      instance, to place a point on the intersection of two lines, or to
+      draw a circle through three given points) using various snapping
+      modes.
+    * Users can provide ipelets (Ipe plug-ins) to add functionality to
+      Ipe.  This way, Ipe can be extended for each task at hand.
+    * The text model is based on Unicode, and has been tested with Korean,
+      Chinese, and Japanese.
+
+grade: devel
+confinement: strict
+
+parts:
+  ipe:
+    source: /home/otfried/Devel/ipe
+    source-subdir: src
+    plugin: make
+    make-parameters:
+      - IPESNAPCRAFT=1
+      - QT_SELECT=5
+    build-packages:
+      - libcairo2-dev
+      - libfreetype6-dev
+      - liblua5.3-dev
+      - libjpeg8-dev
+      - libpng12-dev
+      - make
+      - qtbase5-dev
+      - qtbase5-dev-tools
+      - zlib1g-dev
+      - libqhull-dev
+    after: [desktop-qt5]
+
+  wrapper:
+    plugin: dump
+    source: ./wrapper
+
+apps:
+  ipe:
+    command: desktop-launch ipe
+    plugs: [x11, home]
+
+  ipetoipe:
+    command: ipetoipe
+    plugs: [home]
+
+  ipeextract:
+    command: ipeextract
+    plugs: [home]
+
+  iperender:
+    command: iperender
+    plugs: [home]
+
+  ipescript:
+    command: ipescript
+    plugs: [home]
+
+  ipe6upgrade:
+    command: ipe6upgrade
+    plugs: [home]
