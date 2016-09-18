@@ -1,9 +1,9 @@
 name: ipe
 version: 7.2.6
 summary: Ipe http://ipe.otfried.org/
-description: Drawing editor for creating figures in PDF or PS formats
+description: Drawing editor for creating figures in PDF format.
   Ipe supports making small figures for inclusion into LaTeX
-  documents as well as making multi-page PDF presentations
+  documents as well as making multi-page PDF presentations.
   Ipe's main features are
     * Entry of text as LaTeX source code. This makes it easy to enter
       mathematical expressions, and to reuse the LaTeX-macros of the main
@@ -32,6 +32,7 @@ parts:
       - IPESNAPCRAFT=1
       - QT_SELECT=5
     build-packages:
+      - libglib2.0-0
       - libcairo2-dev
       - libfreetype6-dev
       - liblua5.3-dev
@@ -47,28 +48,41 @@ parts:
   wrapper:
     plugin: dump
     source: ./wrapper
+    organize:
+      wrapper.sh: bin/wrapper.sh
 
+  texlive:
+    plugin: texlive
+    source: http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+    build-packages:
+      - wget
+
+      
 apps:
   ipe:
-    command: desktop-launch ipe
+    command: desktop-launch wrapper.sh ipe
     plugs: [x11, home]
 
   ipetoipe:
-    command: ipetoipe
+    command: wrapper.sh ipetoipe
     plugs: [home]
 
   ipeextract:
-    command: ipeextract
+    command: wrapper.sh ipeextract
     plugs: [home]
 
   iperender:
-    command: iperender
+    command: wrapper.sh iperender
     plugs: [home]
 
   ipescript:
-    command: ipescript
+    command: wrapper.sh ipescript
     plugs: [home]
 
   ipe6upgrade:
-    command: ipe6upgrade
+    command: wrapper.sh ipe6upgrade
+    plugs: [home]
+
+  tlmgr:
+    command: wrapper.sh tlmgr
     plugs: [home]

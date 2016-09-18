@@ -1,6 +1,6 @@
-# Ipe for Snapcraft
+# Ipe in a snap
 
-**Snapcraft** is a system that allows Linux systems to maintain
+**Snappy** is a system that allows Linux systems to maintain
 up-to-date versions of software, as is common under Windows and OSX,
 see http://snapcraft.io.
 
@@ -26,25 +26,26 @@ You can now start Ipe by simply saying `ipe` (which calls
 `/snap/bin/ipe`).  The other Ipe commands are available as
 `ipe.ipetoipe`, `ipe.iperender`, etc.
 
-Unfortunately, this doesn't quite work: Snapcraft isolates the
-installed software from the system, and this doesn't give Ipe access
-to running Latex. (Also not working: starting the manual from the Help
-menu, finding your ipelets in your home directory).
+Snappy isolates the installed software from the system.  This means
+that Ipe does not have access to your system's files (with the
+exception of the files in your home directory that do not start with a
+dot).  In particular, Ipe does not have access to the Latex
+installation on your system.
 
-You therefore need to work around the protection provided by
-Snapcraft.  A script `ipewrapper` is provided as
-`/snap/ipe/current/bin/ipewrapper` that you can use to start Ipe and
-its tools without the protection.
+I have currently "solved" this problem by *including a small Texlive
+installation* inside the snap.  This works fine as long as all the
+Latex packages you are using are part of the snap.  There is currently
+no way to install new packages into this installation (since it is in
+read-only memory).  I am working on a solution for this.
 
-So, to start Ipe, run
-```
-/snap/ipe/current/bin/ipewrapper ipe
-```
+Opening the manual from the Ipe Help menu currently doesn't work.  You
+can open it by opening the file
+`/snap/ipe/current/ipe/doc/manual.html`.
 
-To run `ipetoipe`, say
-```
-/snap/ipe/current/bin/ipewrapper ipetoipe -pdf -export test.ipe
-```
+Declaring an external editor doesn't work (as Ipe would have no access
+to the editor program outside the snap).
 
-You can of course make an alias or shell script to always call ipe
-through this wrapper.
+If you want to customize Ipe, you need to know that some files are in
+unusual locations.  For instance, the ipelet directory is
+`~/snap/ipe/current/.ipe/ipelets` rather than `~/.ipe/ipelets`.
+
