@@ -25,7 +25,7 @@ confinement: strict
 
 parts:
   ipe:
-    source: /home/otfried/Devel/ipe
+    source: https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.6-src.tar.gz
     source-subdir: src
     plugin: make
     make-parameters:
@@ -50,14 +50,34 @@ parts:
     source: ./wrapper
     organize:
       wrapper.sh: bin/wrapper.sh
+      tlmgr.sh: bin/tlmgr
 
   texlive:
     plugin: texlive
     source: http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
     build-packages:
       - wget
+    snap:
+      - -texlive/texmf-dist/doc
+      - -texlive/texmf-dist/source
+      - -texlive/texmf-dist/tex/context
+      - -texlive/texmf-dist/tex/plain
+      - -texlive/texmf-var/web2c/luatex/dvi*
+      - -texlive/texmf-var/web2c/luatex/luatex.*
+      - -texlive/texmf-var/web2c/luajittex/
+      - -texlive/texmf-var/web2c/tex/
+      - -texlive/texmf-var/web2c/metafont
+      - -texlive/texmf-var/web2c/pdftex/etex.*
+      - -texlive/texmf-var/web2c/pdftex/latex.*
+      - -texlive/texmf-var/web2c/pdftex/mptopdf.*
+      - -texlive/texmf-var/web2c/pdftex/pdfetex.*
+      - -texlive/texmf-var/web2c/pdftex/pdftex.*
+      - -texlive/bin/x86_64-linux/xdvi*
+      - -texlive/bin/x86_64-linux/luajittex
+      - -texlive/bin/x86_64-linux/g*
+      - -texlive/bin/x86_64-linux/dvi*
+      - -texlive/texmf-dist/dvips
 
-      
 apps:
   ipe:
     command: desktop-launch wrapper.sh ipe
@@ -83,6 +103,23 @@ apps:
     command: wrapper.sh ipe6upgrade
     plugs: [home]
 
-  tlmgr:
-    command: wrapper.sh tlmgr
+  pdflatex:
+    command: wrapper.sh pdflatex
     plugs: [home]
+
+  lualatex:
+    command: wrapper.sh lualatex
+    plugs: [home]
+
+  bibtex:
+    command: wrapper.sh bibtex
+    plugs: [home]
+
+  kpsewhich:
+    command: wrapper.sh kpsewhich
+    plugs: [home]
+
+  sh:
+    command: wrapper.sh sh
+    plugs: [home]
+

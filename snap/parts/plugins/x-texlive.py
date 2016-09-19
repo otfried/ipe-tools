@@ -6,7 +6,7 @@ import snapcraft
 from snapcraft.plugins import dump
 
 extras = [ "xcolor", "tcolorbox", "pgf", "ms", "environ", "pgfplots",
-           "metalogo" ]
+           "metalogo", "trimspaces", "etoolbox", "cm-super" ]
 
 class TexLivePlugin(snapcraft.plugins.dump.DumpPlugin):
 
@@ -15,16 +15,13 @@ class TexLivePlugin(snapcraft.plugins.dump.DumpPlugin):
 
         # Install TexLive with the standard installer
         env = self._build_environment()
-        #self.run(['{}/install-tl'.format(self.builddir), '-scheme', 'basic'], env=env)
         p1 = Popen(['echo', '-n', 'I'], env=env, stdout=PIPE)
         p2 = Popen(['{}/install-tl'.format(self.builddir), '-portable', '-scheme', 'basic'], env=env, stdin=p1.stdout, stdout=PIPE)
         output = p2.communicate()[0]
-
-        for pkg in extras:
-            self.run(['{}/usr/local/bin/x86_64-linux/tlmgr'.format(self.installdir),
-                      'install', pkg], env=env)
+        self.run(['{}/texlive/bin/x86_64-linux/tlmgr'.format(self.installdir),
+                  'install'] + extras, env=env)
 
     def _build_environment(self):
         env = os.environ.copy()
-        env['TEXLIVE_INSTALL_PREFIX'] = os.path.join(self.installdir, 'usr', 'local')
+        env['TEXLIVE_INSTALL_PREFIX'] = os.path.join(self.installdir, 'texlive')
         return env
