@@ -6,11 +6,11 @@ still provides Ipe 7.1.10 (from late 2015). Distributions tend to be
 conservative to ensure the stability of the system. 
 
 [**Snappy**](http://snapcraft.io) is a new system that provides apps
-in *encapsulated blocks* called **snap**.  A bug in a snap does not
+in *encapsulated blocks* called **snaps**.  A bug in a snap does not
 affect the robustness of the remaining sytem, and so users can freely
-upgrade individual snaps at will.  Ipe will now release an up-to-date
-snap for each release, such that Linux users, like Windows and OSX
-users, can start using immediately.
+upgrade individual snaps at will.  From now on, Ipe will provide an
+up-to-date snap for each Ipe release, such that Linux users, like
+Windows and OSX users, can upgrade easily and immediately.
 
 Snappy is available on recent Linux distributions such as Ubuntu
 16.04, etc.  You install the system by installing the **snapd**
@@ -48,21 +48,23 @@ particular, Ipe does not have access to the Latex installation on your
 system!
 
 To allow Ipe to run *pdflatex*, the Ipe snap contains a *small Texlive
-installation*.  You will need to remember that when Ipe fails to find
-a Latex style or package that you are using, you will need to install
-it **inside** the snap.  The following commands are exposed by the
-snap to help you find Latex problems: `ipe.pdflatex`, `ipe.lualatex`,
-`ipe.kpsewhich`.
+installation*.  You will need to remember this when Ipe fails to find
+a Latex style or package.  In this case, you will need to install the
+Latex package **inside** the snap.
+
+Note that the following commands are exposed by the snap to help you
+find Latex problems: `ipe.pdflatex`, `ipe.lualatex`, `ipe.kpsewhich`.
 
 
 ## Installing additional Latex packages
 
-You cannot add additional Latex styles or packages to the Texlive
+You cannot actually add additional Latex packages to the Texlive
 installation inside a snap, as snaps reside entirely in read-only
 memory.  However, Ipe's Latex installation can use a *user tree* where
 you can add additional styles and fonts.  To install into this user
 tree, you run the *texlive manager* `tlmgr` contained in the snap.
-For technical reasons, it has to be run outside the snap, like this:
+For technical reasons, it has to be run from outside the snap, like
+this:
 
 ```
 /snap/ipe/current/bin/tlmgr install dante-logo
@@ -71,6 +73,9 @@ For technical reasons, it has to be run outside the snap, like this:
 
 ## What doesn't work?
 
+ * The Ipe icon is not shown on the desktop (apparently a bug in
+   snappy).
+ 
  * Opening the manual from the Ipe Help menu currently doesn't work
    (apparently a bug in snappy).  You can read the manual by opening
    the file `/snap/ipe/current/ipe/doc/manual.html`.
@@ -87,5 +92,4 @@ are in locations different from a classic Linux setup.  Use *Show
 configuration* in the Help menu to find the right place.  For
 instance, Ipe runs Latex in `~/snap/ipe/current/latexrun` (rather than
 `~/.ipe/latexrun`), and the ipelet directory is
-`~/snap/ipe/common/ipelets` rather than `~/.ipe/ipelets`,
-
+`~/snap/ipe/common/ipelets` rather than `~/.ipe/ipelets`.

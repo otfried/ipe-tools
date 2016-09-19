@@ -76,7 +76,6 @@ parts:
       - -texlive/bin/x86_64-linux/luajittex
       - -texlive/bin/x86_64-linux/g*
       - -texlive/bin/x86_64-linux/dvi*
-      - -texlive/texmf-dist/dvips
 
 apps:
   ipe:

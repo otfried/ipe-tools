@@ -6,7 +6,7 @@ import snapcraft
 from snapcraft.plugins import dump
 
 extras = [ "xcolor", "tcolorbox", "pgf", "ms", "environ", "pgfplots",
-           "metalogo", "trimspaces", "etoolbox", "cm-super" ]
+           "metalogo", "trimspaces", "etoolbox" ]
 
 class TexLivePlugin(snapcraft.plugins.dump.DumpPlugin):
 
