@@ -21,17 +21,16 @@ def create_ipe(pdffile):
   numPages = doc.numPages
   out = open(outfile, "w")
   out.write("""<ipe version="70205">
-<ipestyle>
-<preamble>
-\\usepackage{graphicx}
+<preamble>\\usepackage{graphicx}
 </preamble>
-</ipestyle>
 <ipestyle name="basic">
 </ipestyle>
 """)
   for i in range(numPages):
     out.write("""<page>
-<text pos="0 0">\includegraphics[page=%d]{%s}</text>
+<layer name="alpha"/>
+<layer name="pdf" edit="no"/>
+<text pos="0 0" layer="pdf">\includegraphics[page=%d]{%s}</text>
     </page>\n""" % (i+1, pdffile))
   out.write("</ipe>\n")
   out.close()
