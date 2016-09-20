@@ -30,9 +30,10 @@ parts:
     plugin: make
     make-parameters:
       - IPESNAPCRAFT=1
+      - IPEQVORONOI=1
       - QT_SELECT=5
+      - IPESTRICT=1
     build-packages:
-      - libglib2.0-0
       - libcairo2-dev
       - libfreetype6-dev
       - liblua5.3-dev
