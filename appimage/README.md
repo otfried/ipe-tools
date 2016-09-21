@@ -9,7 +9,7 @@ Ipe requires `pdflatex` to be installed in order to render text
 elements. It is not included in the AppImage so you need to have a
 LaTeX distribution installed on your system. You can find informations
 about LaTeX and how to install it at
-https://www.tug.org/[www.tug.org].
+[www.tug.org](https://www.tug.org/).
 
 
 ## Download
@@ -21,7 +21,7 @@ https://www.tug.org/[www.tug.org].
   `chmod a+x Ipe-x.y.z-x86_64.AppImage`
 
 
-## How to use it
+## How to use the Ipe AppImage
 
 * To start Ipe, just click on the AppImage file.
 
@@ -47,8 +47,9 @@ The AppImage for Ipe is created inside a fresh installation of CentOS
 
 * Change directory with `cd ipe-tools/appimage`
 
-* Download and created needed tools with `./setup.sh`.
+* Download and compile the needed tools and libraries with
+  `./setup.sh`.
 
-* Start compilation and packaging process with `./recipe.sh`.
+* Start Ipe compilation and packaging process with `./recipe.sh`.
   This creates `Ipe.AppImage` inside the current directory.
 
