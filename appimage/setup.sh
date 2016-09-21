@@ -13,6 +13,7 @@ set -e
 sudo yum -y install epel-release
 sudo yum -y install readline-devel zlib-devel cairo-devel
 sudo yum -y install cmake binutils fuse glibc-devel glib2-devel fuse-devel gcc zlib-devel # AppImageKit dependencies
+sudo yum -y install poppler-devel
 
 # Need a newer gcc, getting it from Developer Toolset 2
 sudo wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
@@ -66,6 +67,16 @@ cd libpng-1.6.21
 ./configure
 make check
 sudo make install
+cd ..
+
+# qhull
+wget http://www.qhull.org/download/qhull-2015-src-7.2.0.tgz
+tar xfvz qhull-2015-src-7.2.0.tgz
+cd qhull-2015.2
+make
+sudo install -d /usr/local/include/qhull
+sudo install -m 0644 src/libqhull/*.h /usr/local/include/qhull
+sudo install -m 0755 lib/libqhullstatic.a /usr/local/lib
 cd ..
 
 ######################################################

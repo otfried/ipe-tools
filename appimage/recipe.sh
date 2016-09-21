@@ -25,11 +25,12 @@ mkdir -p $APP_DIR/usr/lib/qt5
 
 # Change directory to build. Everything happens in build.
 mkdir -p build
-cd build
 
 ######################################################
 # Build Ipe
 ######################################################
+
+cd $BASE/build
 
 wget https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.6-src.tar.gz
 tar xfvz ipe-7.2.6-src.tar.gz
@@ -43,11 +44,26 @@ export PNG_CFLAGS="-I\/usr\/local\/include\/libpng16"
 export PNG_LIBS="-lpng16"
 export LUA_CFLAGS="-I/usr/local/include"
 export LUA_LIBS="-L/usr/local/lib -llua -lm"
+export QHULL_CFLAGS="-I/usr/local/include/qhull"
+export QHULL_LIBS="-lqhullstatic"
 
 export IPEPREFIX=$APP_DIR/usr
+export IPEQVORONOI=1
 
 make IPEAPPIMAGE=1
 make install IPEAPPIMAGE=1
+
+######################################################
+# Build pdftoipe
+######################################################
+
+cd $BASE/build
+
+cp -r $BASE/../pdftoipe .
+cd pdftoipe
+export POPPLER_LIBS=-static `pkg-config --libs poppler`
+make
+install -m 0755 pdftoipe $APP_DIR/usr/bin
 
 ######################################################
 # Populate Ipe.AppDir

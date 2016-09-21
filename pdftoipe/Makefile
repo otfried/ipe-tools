@@ -16,9 +16,11 @@ else ifdef IPECROSS
   LDFLAGS += -static
   TARGET = pdftoipe.exe	
 else
-  CPPFLAGS += $(shell pkg-config --cflags poppler) 
-  LIBS += $(shell pkg-config --libs poppler)
-  TARGET = pdftoipe
+  POPPLER_CFLAGS ?= $(shell pkg-config --cflags poppler)
+  POPPLER_LIBS   ?= $(shell pkg-config --libs poppler)
+  CPPFLAGS += $(POPPLER_CFLAGS)
+  LIBS += $(POPPLER_LIBS)
+  TARGET   = pdftoipe
 endif
 
 CXXFLAGS += -Wno-write-strings

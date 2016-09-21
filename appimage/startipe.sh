@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 CMD=$1
 if [ "x${CMD}x" == "xx" ]; then
     ipe -style fusion "$@"
