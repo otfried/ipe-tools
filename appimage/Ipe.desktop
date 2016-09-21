@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Ipe
+GenericName=drawing program
+Icon=ipe.png
+Exec=startipe.sh
+Terminal=false
+Categories=Graphics;
