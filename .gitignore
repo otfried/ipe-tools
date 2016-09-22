@@ -2,4 +2,7 @@
 pdftoipe/pdftoipe
 figtoipe/figtoipe
 ipe5toxml/ipe5toxml
-
+build
+*.AppImage
+AppImageKit
+Ipe.AppDir

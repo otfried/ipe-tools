@@ -7,10 +7,10 @@ set -e
 source /opt/rh/devtoolset-2/enable
 
 BASE=`pwd`
+IPE=ipe-7.2.6
 
-APP=Ipe
-APP_DIR=$BASE/$APP.AppDir
-APP_IMAGE=$BASE/$APP.AppImage
+APP_DIR=$BASE/Ipe.AppDir
+APP_IMAGE=$BASE/$IPE-x86_64.AppImage
 
 # Cleanup 
 rm -fr build
@@ -32,10 +32,13 @@ mkdir -p build
 
 cd $BASE/build
 
-wget https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.6-src.tar.gz
-tar xfvz ipe-7.2.6-src.tar.gz
+wget https://dl.bintray.com/otfried/generic/ipe/7.2/$IPE-src.tar.gz
+tar xfvz $IPE-src.tar.gz
 
-cd ipe-7.2.6/src
+#mkdir $IPE
+#rsync -trvz --delete --exclude=.git --exclude=build/obj --exclude=build/Ipe.app $SOURCE_HOST:Devel/ipe/ $IPE/
+
+cd $IPE/src
 
 export QT_SELECT=5
 export MOC=moc-qt5
@@ -61,9 +64,18 @@ cd $BASE/build
 
 cp -r $BASE/../pdftoipe .
 cd pdftoipe
-export POPPLER_LIBS=-static `pkg-config --libs poppler`
 make
 install -m 0755 pdftoipe $APP_DIR/usr/bin
+
+######################################################
+# Build exec wrapper (for calling subprocesses)
+######################################################
+
+#cd $BASE/build
+#git clone git://anongit.kde.org/scratch/brauch/appimage-exec-wrapper.git
+#cd appimage-exec-wrapper
+#make
+#install -m 0755 exec.so $APP_DIR/usr/lib/
 
 ######################################################
 # Populate Ipe.AppDir
