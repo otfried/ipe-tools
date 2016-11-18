@@ -86,6 +86,7 @@ cd ..
 cd ..
 git clone https://github.com/probonopd/AppImageKit.git
 cd AppImageKit/
+git checkout master
 cmake .
 make clean
 make

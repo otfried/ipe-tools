@@ -35,9 +35,14 @@ $ ./ipe-7.2.6-x86_64.AppImage
 $ ./ipe-7.2.6-x86_64.AppImage ipetoipe -pdf ~/test.ipe
 ```
 
-Note that you will have to use absolute filenames in the arguments to
-the command line tools, because the AppImage changes directory before
-executing the code.
+* If you want to start Ipe with a command line argument, proceed as for the tools: 
+```
+$ ./ipe-7.2.6-x86_64.AppImage ipe -sheet presentation ~/mytalk.pdf
+```
+
+Note that you will have to use **absolute filenames** in the arguments
+to the command line tools, because the AppImage changes directory
+before executing the code.
 
 
 ## How to create an AppImage for Ipe

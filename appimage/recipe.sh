@@ -14,7 +14,7 @@ APP_IMAGE=$BASE/$IPE-x86_64.AppImage
 
 # Cleanup 
 rm -fr build
-rm -fr $APP_DIR
+rm -fr $APP_DIR $APP_IMAGE
 
 ######################################################
 # create AppDir
@@ -32,7 +32,14 @@ mkdir -p build
 
 cd $BASE/build
 
-wget https://dl.bintray.com/otfried/generic/ipe/7.2/$IPE-src.tar.gz
+if [ "x$1" == "xlocal" ]; then
+  echo "Using local copy of Ipe sources"
+  cp $HOME/$IPE-src.tar.gz .
+else
+  echo "Downloading Ipe sources"
+  wget https://dl.bintray.com/otfried/generic/ipe/7.2/$IPE-src.tar.gz
+fi
+
 tar xfvz $IPE-src.tar.gz
 
 #mkdir $IPE
