@@ -5,19 +5,45 @@ svgtoipe \- Convert a SVG file to Ipe 7 format
 
 .SH SYNOPSIS
 .B svgtoipe
-\fIfigure.svg [ figure.svg ]\fR
+\fI[\-h] [\-c] figure.svg [figure.ipe] \fR
 
 .SH DESCRIPTION
 \fBsvgtoipe\fR converts a SVG file to an XML file understood by Ipe
-version 7. If the output filename is not specified, it will be derived
+version 7.
+.PP
+If the output filename is not specified, it will be derived
 either by replacing \fI.ipe\fR at the end of the input filename with
 \fI.svg\fR, or by appending \fI.ipe\fR if the input filename does not
 end with with \fI.svg\fR.
 
-Images are converted if python-imaging is available.
+If either input or output filename is '\-\-', then stdin, resp. stdout
+is used to read or write data.
+.TP
+\-h
+display a short help text
+.TP
+\-c
+operate in clipboard mode. Data is output as ipe clipboard content.
+This allows pasting svg data from inkscape to ipe:
+(1) Copy elements Inkscape to clipboard,
+(2) run: 'xsel | ./svgtoipe.py -c -- | xsel -i',
+(3) paste clipboard content into ipe.
+
+.SH Supported SVG Features
+
+The following SVG elements are converted: path, image, rect, circle, ellipse,
+line, polygon, and polyline
+
+The following SVG elements are converted: group, clipPath, linearGradient,
+andradialGradient
+
+Image conversion is only supported if \fIpython-imaging\fR is available.  Text
+is only converted, if it has coordinates specified as attribute of the svg text
+element.
 
 .SH AUTHOR
 Otfried Cheong
+Christian Kapeller
 
 .SH "SEE ALSO"
 \fBipe\fR(1)
