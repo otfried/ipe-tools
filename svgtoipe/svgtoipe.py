@@ -2,19 +2,19 @@
 # --------------------------------------------------------------------
 # convert SVG to Ipe format
 # --------------------------------------------------------------------
-# 
+#
 # Copyright (C) 2009-2014  Otfried Cheong
 #
 # svgtoipe is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # svgtoipe is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with svgtoipe; if not, you can find it at
 # "http://www.gnu.org/copyleft/gpl.html", or write to the Free
@@ -25,8 +25,10 @@
 svgtoipe_version = "20091018"
 
 import sys
+import argparse
 import xml.dom.minidom as xml
 from xml.dom.minidom import Node
+from xml.parsers.expat import ExpatError
 import re
 import math
 
@@ -60,7 +62,7 @@ color_keywords = {
   "aqua" :"rgb(0, 255, 255)",
 }
 
-attribute_names = [ "stroke", 
+attribute_names = [ "stroke",
                     "fill",
                     "stroke-opacity",
                     "fill-opacity",
@@ -71,9 +73,9 @@ attribute_names = [ "stroke",
                     "stroke-dasharray",
                     "stroke-dashoffset",
                     "stroke-miterlimit",
-                    "opacity", 
+                    "opacity",
                     "font-size" ]
-  
+
 def printAttributes(n):
   a = n.attributes
   for i in range(a.length):
@@ -98,7 +100,7 @@ def parse_float(txt):
     return float(txt)
 
 def parse_opacity(txt):
-  if not txt: 
+  if not txt:
     return None
   m = int(10 * (float(txt) + 0.05))
   if m == 0: m = 1
@@ -120,7 +122,7 @@ def parse_color_component(txt):
     return float(txt[:-1]) / 100.0
   else:
     return int(txt) / 255.0
-  
+
 def parse_color(c):
   if not c or c == 'none':
     return None
@@ -283,7 +285,7 @@ class Matrix(object):
 
   # Default is identity matrix
   def __init__(self, string = None):
-    self.values = [1, 0, 0, 1, 0, 0] 
+    self.values = [1, 0, 0, 1, 0, 0]
     if not string or string == "":
       return
     if isinstance(string, list):
@@ -305,8 +307,8 @@ class Matrix(object):
       self.values = [sx, 0, 0, sy, 0, 0]
     elif op == "rotate":
       phi = math.pi * d[0] / 180.0
-      self.values = [math.cos(phi), math.sin(phi), 
-                     -math.sin(phi), math.cos(phi), 0, 0]           
+      self.values = [math.cos(phi), math.sin(phi),
+                     -math.sin(phi), math.cos(phi), 0, 0]
     elif op == "skewX":
       tphi = math.tan(math.pi * d[0] / 180.0)
       self.values = [1, 0, tphi, 1, 0, 0]
@@ -315,36 +317,46 @@ class Matrix(object):
       self.values = [1, tphi, 0, 1, 0, 0]
     else:
       sys.stderr.write("Unknown transform: %s\n" % string)
-      
+
   def __call__(self, other):
     return (self.values[0]*other[0] + self.values[2]*other[1] + self.values[4],
             self.values[1]*other[0] + self.values[3]*other[1] + self.values[5])
-  
+
   def inverse(self):
     d = float(self.values[0]*self.values[3] - self.values[1]*self.values[2])
-    return Matrix([self.values[3]/d, -self.values[1]/d, 
+    return Matrix([self.values[3]/d, -self.values[1]/d,
                    -self.values[2]/d, self.values[0]/d,
-                   (self.values[2]*self.values[5] - 
+                   (self.values[2]*self.values[5] -
                     self.values[3]*self.values[4])/d,
-                   (self.values[1]*self.values[4] - 
+                   (self.values[1]*self.values[4] -
                     self.values[0]*self.values[5])/d])
 
   def __mul__(self, other):
     a, b, c, d, e, f = self.values
     u, v, w, x, y, z = other.values
-    return Matrix([a*u + c*v, b*u + d*v, a*w + c*x, 
+    return Matrix([a*u + c*v, b*u + d*v, a*w + c*x,
                    b*w + d*x, a*y + c*z + e, b*y + d*z + f])
-  
+
   def __str__(self):
     a, b, c, d, e, f = self.values
     return "%g %g %g %g %g %g" % (a, b, c, d, e, f)
-    
+
 # --------------------------------------------------------------------
-                               
+
 class Svg():
 
   def __init__(self, fname):
-    self.dom = xml.parse(fname)
+    try:
+      if fname == "--":
+          self.dom = xml.parseString(sys.stdin.read())
+      else:
+          self.dom = xml.parse(fname)
+
+    except ExpatError as exc:
+      sys.stderr.write('ERROR: Input is not valid xml data:\n')
+      sys.stderr.write(exc.message)
+      return
+
     attr = { }
     for a in attribute_names:
       attr[a] = None
@@ -366,15 +378,14 @@ class Svg():
 
 # --------------------------------------------------------------------
 
-  def parse_svg(self, outname):
-    self.out = open(outname, "w")
+  def write_ipe_header(self):
     self.out.write('<?xml version="1.0"?>\n')
     self.out.write('<!DOCTYPE ipe SYSTEM "ipe.dtd">\n')
     self.out.write('<ipe version="70005" creator="svgtoipe %s">\n' %
                    svgtoipe_version)
     self.out.write('<ipestyle>\n')
-    self.out.write(('<layout paper="%d %d" frame="%d %d" ' + 
-                    'origin="0 0" crop="no"/>\n') % 
+    self.out.write(('<layout paper="%d %d" frame="%d %d" ' +
+                    'origin="0 0" crop="no"/>\n') %
                    (self.width, self.height, self.width, self.height))
     for t in range(10, 100, 10):
       self.out.write('<opacity name="%d%%" value="0.%d"/>\n' % (t, t))
@@ -396,24 +407,65 @@ class Svg():
         elif self.defs[k][0] == "radialGradient":
           self.write_radial_gradient(k)
       self.out.write('</ipestyle>\n')
+
+  def parse_svg(self, outname, **kwargs):
+    """ parses the svg, and writes it to file.
+        outname, str, output filename. if '--' then parse_svg writes to stdout.
+
+        Keywords:
+
+        outmode, str, 'file' write in ipe file format.
+                      'clipboard', write as ipe clipboard selection
+    """
+    outmode = kwargs.get('outmode', 'file')
+
+    if outname == '--':
+      self.out = sys.stdout
+    else:
+      self.out = open(outname, "w")
+      # write header
+
+    if outmode == 'file':
+      self.write_ipe_header()
+      self.out.write('<page>\n')
+    elif outmode == "clipboard":
+      self.out.write('<ipeselection pos="0 0">\n')
+    else:
+      sys.stderr.write("bad output mode '{}'".format(outmode))
+      return
+
+    self.write_data()
+
+    if outmode == 'file':
+      self.out.write('</page>\n')
+      self.out.write('</ipe>\n')
+    elif outmode == 'clipboard':
+      self.out.write('</ipeselection>\n')
+
+    self.out.close()
+
+  def write_data(self):
     # start real data
-    self.out.write('<page>\n')
     m = Matrix([1, 0, 0, 1, 0, self.height / 2.0])
     m = m * Matrix([1, 0, 0, -1, 0, 0])
-    m = m * Matrix([1, 0, 0, 1, 
+    m = m * Matrix([1, 0, 0, 1,
                     -self.origin[0], -(self.origin[1] + self.height / 2.0)])
     self.out.write('<group matrix="%s">\n' % str(m))
-    for n in self.root.childNodes:
+    self.parse_nodes(self.root)
+    self.out.write('</group>\n')
+
+  def parse_nodes(self, root):
+    """ parses recognized svg elements """
+    for n in root.childNodes:
       if n.nodeType != Node.ELEMENT_NODE:
         continue
-      if hasattr(self, "node_" + n.tagName):
-        getattr(self, "node_" + n.tagName)(n)
+
+      nodeName = "node_" + n.tagName.replace(":","_")
+
+      if hasattr(self, nodeName):
+        getattr(self, nodeName)(n)
       else:
         sys.stderr.write("Unhandled node: %s\n" % n.tagName)
-    self.out.write('</group>\n')
-    self.out.write('</page>\n')
-    self.out.write('</ipe>\n')
-    self.out.close()
 
 # --------------------------------------------------------------------
 
@@ -424,10 +476,10 @@ class Svg():
     self.out.write(' coords="%g %g %g %g">\n' % (x1, y1, x2, y2))
     for s in stops:
       offset, color = s
-      self.out.write(' <stop offset="%g" color="%g %g %g"/>\n' % 
+      self.out.write(' <stop offset="%g" color="%g %g %g"/>\n' %
                      (offset, color[0], color[1], color[2]))
     self.out.write('</gradient>\n')
-    
+
   def write_radial_gradient(self, k):
     typ, cx, cy, r, fx, fy, stops, matrix = self.defs[k]
     self.out.write('<gradient name="g%s" type="radial" extend="yes"\n' % k)
@@ -435,7 +487,7 @@ class Svg():
     self.out.write(' coords="%g %g %g %g %g %g">\n' % (fx, fy, 0, cx, cy, r))
     for s in stops:
       offset, color = s
-      self.out.write(' <stop offset="%g" color="%g %g %g"/>\n' % 
+      self.out.write(' <stop offset="%g" color="%g %g %g"/>\n' %
                      (offset, color[0], color[1], color[2]))
     self.out.write('</gradient>\n')
 
@@ -463,6 +515,10 @@ class Svg():
         if ref.startswith("#") and ref[1:] in self.defs:
           stops = self.defs[ref[1:]][5]
     return stops
+
+
+  def node_inkscape_clipboard(self, node):
+    self.parse_nodes(node)
 
   def def_linearGradient(self, n):
     #printAttributes(n)
@@ -496,7 +552,7 @@ class Svg():
     matrix = get_gradientTransform(n)
     stops = self.get_stops(n)
     self.defs[kid] = ("linearGradient", x1, x2, y1, y2, stops, matrix)
-    
+
   def def_radialGradient(self, n):
     #printAttributes(n)
     kid = n.getAttribute("id")
@@ -556,7 +612,7 @@ class Svg():
 
   def def_g(self, group):
     for n in group.childNodes:
-      if n.nodeType != Node.ELEMENT_NODE: 
+      if n.nodeType != Node.ELEMENT_NODE:
         continue
       if hasattr(self, "def_" + n.tagName):
         getattr(self, "def_" + n.tagName)(n)
@@ -632,16 +688,10 @@ class Svg():
     self.attributes.append(attr)
     self.out.write('<group')
     m = parse_transform(group)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     self.out.write('>\n')
-    for n in group.childNodes:
-      if n.nodeType != Node.ELEMENT_NODE: 
-        continue
-      if hasattr(self, "node_" + n.tagName):
-        getattr(self, "node_" + n.tagName)(n)
-      else:
-        sys.stderr.write("Unhandled node: %s\n" % n.tagName)
+    self.parse_nodes(group)
     self.out.write('</group>\n')
     self.attributes.pop()
 
@@ -649,11 +699,11 @@ class Svg():
     for n in root.childNodes:
       if n.nodeType == Node.TEXT_NODE:
         self.text += n.data
-      if n.nodeType != Node.ELEMENT_NODE: 
+      if n.nodeType != Node.ELEMENT_NODE:
         continue
       if n.tagName == "tspan":  # recurse
         self.collect_text(n)
-        
+
   def node_text(self, t):
     if not t.hasAttribute("x") or not t.hasAttribute("y"):
       sys.stderr.write("Text without coordinates ignored\n")
@@ -675,7 +725,7 @@ class Svg():
     self.text = ""
     self.collect_text(t)
     self.out.write('>%s</text>\n' % self.text.encode("UTF-8"))
-    
+
   def node_image(self, node):
     if not have_pil:
       sys.stderr.write("No Python image library, <image> ignored\n")
@@ -703,7 +753,7 @@ class Svg():
     fin = cStringIO.StringIO(data)
     image = Image.open(fin)
     m = parse_transform(node)
-    if not m:   
+    if not m:
       m = Matrix()
     m = m * Matrix([1, 0, 0, -1, x, y+h]) * Matrix([1, 0, 0, 1, -x, -y])
     self.out.write(' matrix="%s"' % m)
@@ -731,16 +781,16 @@ class Svg():
 
   # handled in def pass
   def node_linearGradient(self, n):
-    pass 
+    pass
 
   def node_radialGradient(self, n):
-    pass 
+    pass
 
   def node_rect(self, n):
     attr = self.parse_attributes(n)
     self.out.write('<path')
     m = parse_transform(n)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     self.write_pathattributes(attr)
     self.out.write('>\n')
@@ -755,7 +805,7 @@ class Svg():
   def node_circle(self, n):
     self.out.write('<path')
     m = parse_transform(n)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
@@ -769,7 +819,7 @@ class Svg():
   def node_ellipse(self, n):
     self.out.write('<path')
     m = parse_transform(n)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
@@ -788,7 +838,7 @@ class Svg():
   def node_line(self, n):
     self.out.write('<path')
     m = parse_transform(n)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
@@ -807,14 +857,14 @@ class Svg():
 
   def node_polyline(self, n):
     self.polygon(n, closed=False)
-    
+
   def node_polygon(self, n):
     self.polygon(n, closed=True)
 
   def polygon(self, n, closed):
     self.out.write('<path')
     m = parse_transform(n)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
@@ -833,7 +883,7 @@ class Svg():
   def node_path(self, n):
     self.out.write('<path')
     m = parse_transform(n)
-    if m:   
+    if m:
       self.out.write(' matrix="%s"' % m)
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
@@ -844,20 +894,65 @@ class Svg():
 
 # --------------------------------------------------------------------
 
+def parse_arguments():
+    """ parses command line arguments"""
+    parser = argparse.ArgumentParser(
+            description="convert SVG into IPE files",
+            epilog="""
+              Supported SVG elements:
+                  path,image,rect,circle,ellipse,line,polygon,polyline
+              Supported SVG attributes:
+                  group, clipPath,linearGradient,radialGradient
+              """)
+
+    parser.add_argument('-c', '--clipboard', dest='clipboard',
+        action='store_true',
+        help="""
+        if -c is present, svg data is written as
+        clipboard content. This allows pasting svg data from
+        inkscape to ipe: (1) Copy elements Inkscape to clipboard,
+        (2) run: 'xsel | ./svgtoipe.py -c -- | xsel -i', (3)
+        paste clipboard content into ipe.
+        """)
+
+    parser.add_argument('infile', metavar='svg-file.svg',
+            help="input file in svg format. If infile = '--' svg data is read"+\
+                 "from stdin")
+
+    parser.add_argument('outfile', metavar='ipe-file.ipe', nargs='?',
+            help="""
+                filename to write output. If no filename is given, the input filename
+                together with '.ipe' extension is used.If outfile is '--', then data
+                is written to stdout.""")
+
+    parser.set_defaults(
+        infile="--",
+        verbosity=0,
+        clipboard=False,
+    )
+
+    #try:
+    args = parser.parse_args()
+    print args.infile
+    if args.outfile is None:
+      if args.infile != "--":
+        args.outfile = args.infile[:-4] + ".ipe"
+
+    return args
+    #except Exception as exc:
+        #sys.stderr.write("parsing error:\n")
+        #sys.exit(1)
+
 def main():
-  if len(sys.argv) != 2 and len(sys.argv) != 3:
-    sys.stderr.write("Usage: svgtoipe <figure.svg> [ <figure.ipe> ]\n")
-    return
-  fname = sys.argv[1]
-  if len(sys.argv) > 2:
-    outname = sys.argv[2]
+  args = parse_arguments()
+
+  svg = Svg(args.infile)
+  if args.clipboard:
+    svg.parse_svg(args.outfile, outmode="clipboard")
   else:
-    if fname[-4:].lower() == ".svg":
-      outname = fname[:-4] + ".ipe"
-    else:
-      outname = fname + ".ipe"
-  svg = Svg(fname)
-  svg.parse_svg(outname)
+    svg.parse_svg(args.outfile)
+
+  sys.exit(0)
 
 if __name__ == '__main__':
   main()
