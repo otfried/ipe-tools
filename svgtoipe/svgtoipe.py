@@ -3,7 +3,7 @@
 # convert SVG to Ipe format
 # --------------------------------------------------------------------
 #
-# Copyright (C) 2009-2014  Otfried Cheong
+# Copyright (C) 2009-2016  Otfried Cheong
 #
 # svgtoipe is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #
 # --------------------------------------------------------------------
 
-svgtoipe_version = "20091018"
+svgtoipe_version = "20161209"
 
 import sys
 import argparse
