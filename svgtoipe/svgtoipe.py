@@ -705,11 +705,16 @@ class Svg():
         self.collect_text(n)
 
   def node_text(self, t):
-    if not t.hasAttribute("x") or not t.hasAttribute("y"):
-      sys.stderr.write("Text without coordinates ignored\n")
-      return
-    x = float(t.getAttribute("x"))
-    y = float(t.getAttribute("y"))
+    if not t.hasAttribute("x"):
+        x = 0.0
+    else:
+        x = float(t.getAttribute("x"))
+
+    if not t.hasAttribute("y"):
+        y = 0.0
+    else:
+        y = float(t.getAttribute("y"))
+    
     attr = self.parse_attributes(t)
     self.out.write('<text pos="%g %g"' % (x,y))
     self.out.write(' transformations="affine" valign="baseline"')
