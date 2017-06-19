@@ -800,6 +800,10 @@ class Svg():
       if mapped_family is not None:
         self.text = "{\\fontfamily{" + mapped_family + "}\\selectfont{}" + self.text + "}"
 
+    if "weight" in attributes:
+      if attributes["weight"] == "bold":
+        self.text = "\\bf{" + self.text + "}"
+
     self.out.write('>%s</text>\n' % self.text.encode("UTF-8"))
 
   def node_image(self, node):
