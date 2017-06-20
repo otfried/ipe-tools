@@ -704,6 +704,56 @@ class Svg():
       if n.tagName == "tspan":  # recurse
         self.collect_text(n)
 
+
+  def parse_text_style(self, t):
+    attrs = {}
+    if not t.hasAttribute("style"):
+      return attrs
+
+    tokens = t.getAttribute("style").split(";")
+    for token in tokens:
+      if (len(token.split(":")) != 2):
+        print("Ignored style token: " + str(token))
+        # Strange token
+        continue
+      key, value = token.split(":")
+      value = value.strip().lower()
+      key = key.strip().lower()
+
+      if key == "font-weight":
+        if value in ("bold", "bolder"):
+          attrs["weight"] = "bold"
+      elif key == "font-size":
+        attrs["size"] = parse_float(value)
+      elif key == "font-family":
+        attrs["svg-families"] = [v.strip() for v in (value.split(","))]
+      elif key == "text-anchor":
+        attrs["anchor"] = value
+
+    return attrs
+
+  def parse_text_attrs(self, t):
+    raw_attrs = self.parse_attributes(t)
+    attrs = {}
+
+    if raw_attrs["font-size"]:
+      attrs["size"] = parse_float(raw_attrs["font-size"])
+    if raw_attrs["fill"]:
+      attrs["color"] = parse_color(raw_attrs["fill"])
+
+    return attrs
+
+
+  def map_svg_font_families(self, families):
+    # return the first family for which we find a mapping
+    for family in families:
+      if family in ("helvetica", "sans-serif"):
+        return "phv"
+      elif family in ("times new roman", "times", "serif"):
+        return "ptm"
+    return None
+
+
   def node_text(self, t):
     if not t.hasAttribute("x"):
         x = 0.0
@@ -714,21 +764,46 @@ class Svg():
         y = 0.0
     else:
         y = float(t.getAttribute("y"))
-    
-    attr = self.parse_attributes(t)
+
+    attributes = self.parse_text_style(t)
+    attributes.update(self.parse_text_attrs(t))
+
     self.out.write('<text pos="%g %g"' % (x,y))
     self.out.write(' transformations="affine" valign="baseline"')
     m = parse_transform(t)
     if not m: m = Matrix()
     m = m * Matrix([1, 0, 0, -1, x, y]) * Matrix([1, 0, 0, 1, -x, -y])
     self.out.write(' matrix="%s"' % m)
-    if attr["font-size"]:
-      self.out.write(' size="%g"' % parse_float(attr["font-size"]))
-    color = parse_color(attr["fill"])
-    if color:
-      self.out.write(' stroke="%g %g %g"' % color)
+
+    if "size" in attributes:
+      self.out.write(' size="%g"' % attributes["size"])
+
+    if "color" in attributes:
+      self.out.write(' stroke="%g %g %g"' % attributes["color"])
+
+    halign = "left"
+    valign = "bottom"
+    if "anchor" in attributes:
+      if attributes["anchor"] == "middle":
+        halign = "center"
+        valign = "center"
+      elif attributes["anchor"] == "end":
+        halign = "right"
+    self.out.write(' valign="%s"' % valign)
+    self.out.write(' halign="%s"' % halign)
+
     self.text = ""
     self.collect_text(t)
+
+    if "svg-families" in attributes:
+      mapped_family = self.map_svg_font_families(attributes["svg-families"])
+      if mapped_family is not None:
+        self.text = "{\\fontfamily{" + mapped_family + "}\\selectfont{}" + self.text + "}"
+
+    if "weight" in attributes:
+      if attributes["weight"] == "bold":
+        self.text = "\\bf{" + self.text + "}"
+
     self.out.write('>%s</text>\n' % self.text.encode("UTF-8"))
 
   def node_image(self, node):
