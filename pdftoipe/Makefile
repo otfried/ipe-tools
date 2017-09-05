@@ -23,7 +23,7 @@ else
   TARGET   = pdftoipe
 endif
 
-CXXFLAGS += -Wno-write-strings
+CXXFLAGS += -Wno-write-strings -std=c++11
 
 all: $(TARGET)
 

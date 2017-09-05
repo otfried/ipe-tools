@@ -65,6 +65,10 @@ If you want to compile pdftoipe on Windows, please refer to
 Changes
 =======
 
+ * 2017/09/05
+   Added -std=c++11 flag to Makefile for compiling with new poppler
+   version. 
+
  * 2014/03/03
    Applied patch from bug #138 to fix compilation on newer poppler
    versions, as well as fix missing dollar signs for some greek
