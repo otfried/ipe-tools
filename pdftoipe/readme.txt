@@ -65,6 +65,9 @@ If you want to compile pdftoipe on Windows, please refer to
 Changes
 =======
 
+ * 2017/09/19
+   Fixed formatting of color values from %g to %f.
+
  * 2017/09/05
    Added -std=c++11 flag to Makefile for compiling with new poppler
    version. 

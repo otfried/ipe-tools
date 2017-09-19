@@ -14,7 +14,7 @@
 class GfxPath;
 class GfxFont;
 
-#define PDFTOIPE_VERSION "2014/03/03"
+#define PDFTOIPE_VERSION "2017/09/19"
 
 class XmlOutputDev : public OutputDev
 {

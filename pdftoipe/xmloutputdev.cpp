@@ -611,7 +611,7 @@ void XmlOutputDev::writeColor(const char *prefix, const GfxRGB &rgb,
 {
   if (prefix)
     writePS(prefix);
-  writePSFmt("\"%g %g %g\"", colToDbl(rgb.r), colToDbl(rgb.g), colToDbl(rgb.b));
+  writePSFmt("\"%f %f %f\"", colToDbl(rgb.r), colToDbl(rgb.g), colToDbl(rgb.b));
   if (suffix)
     writePS(suffix);
 }
