@@ -161,17 +161,20 @@ def parse_path(out, d):
   d = re.findall("([A-Za-z]|-?[0-9]+\.?[0-9]*(?:e-?[0-9]*)?)", d)
   x, y = 0.0, 0.0
   xs, ys = 0.0, 0.0
+  x0, y0 = 0.0, 0.0
   while d:
     if not d[0][0] in "01234567890.-":
       opcode = d.pop(0)
     if opcode == 'M':
       x, y = pnext(d, 2)
+      x0, y0 = x, y
       out.write("%g %g m\n" % (x, y))
       opcode = 'L'
     elif opcode == 'm':
       x1, y1 = pnext(d, 2)
       x += x1
       y += y1
+      x0, y0 = x, y
       out.write("%g %g m\n" % (x, y))
       opcode = 'l'
     elif opcode == 'L':
@@ -235,6 +238,7 @@ def parse_path(out, d):
       draw_arc(out, x, y, rx, ry, phi, large_arc, sweep, x2, y2)
       x, y = x2, y2
     elif opcode in 'zZ':
+      x, y = x0, y0
       out.write("h\n")
     else:
       sys.stderr.write("Unrecognised opcode: %s\n" % opcode)
