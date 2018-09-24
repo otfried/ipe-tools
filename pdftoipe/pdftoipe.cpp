@@ -156,10 +156,6 @@ int main(int argc, char *argv[])
   delete doc;
   delete globalParams;
 
-  // check for memory leaks
-  Object::memCheck(stderr);
-  gMemReport(stderr);
-
   return exitCode;
 }
 

@@ -65,6 +65,10 @@ If you want to compile pdftoipe on Windows, please refer to
 Changes
 =======
 
+ * 2018/09/24
+   Removed Object::memCheck call to compile with poppler 0.69 (bug
+   #29). 
+
  * 2017/09/19
    Fixed formatting of color values from %g to %f.
 
