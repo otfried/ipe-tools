@@ -21,7 +21,7 @@ class XmlOutputDev : public OutputDev
 public:
 
   // Open an XML output file, and write the prolog.
-  XmlOutputDev(char *fileName, XRef *xrefA, Catalog *catalog,
+  XmlOutputDev(const char *fileName, XRef *xrefA, Catalog *catalog,
 	       int firstPage, int lastPage);
   
   // Destructor -- writes the trailer and closes the file.

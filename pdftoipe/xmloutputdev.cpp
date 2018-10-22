@@ -24,7 +24,7 @@
 // XmlOutputDev
 //------------------------------------------------------------------------
 
-XmlOutputDev::XmlOutputDev(char *fileName, XRef *xrefA, Catalog *catalog,
+XmlOutputDev::XmlOutputDev(const char *fileName, XRef *xrefA, Catalog *catalog,
 			   int firstPage, int lastPage)
 {
   FILE *f;
@@ -63,8 +63,8 @@ XmlOutputDev::XmlOutputDev(char *fileName, XRef *xrefA, Catalog *catalog,
   }
   */
 
-  PDFRectangle *media = page->getMediaBox();
-  PDFRectangle *crop = page->getCropBox();
+  const PDFRectangle *media = page->getMediaBox();
+  const PDFRectangle *crop = page->getCropBox();
 
   fprintf(stderr, "MediaBox: %g %g %g %g (%g x %g)\n", 
 	  media->x1, media->x2, media->y1, media->y2, wid, ht);
@@ -282,8 +282,8 @@ void XmlOutputDev::startText(GfxState *state, double x, double y)
   double xt, yt;
   state->transform(x, y, &xt, &yt);
 
-  double *T = state->getTextMat();
-  double *C = state->getCTM();
+  const double *T = state->getTextMat();
+  const double *C = state->getCTM();
 
   /*
   fprintf(stderr, "TextMatrix = %g %g %g %g %g %g\n", 
@@ -337,8 +337,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
 
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
 
-  double *mat;
-  mat = state->getCTM();
+  const double *mat = state->getCTM();
   double tx = mat[0] + mat[2] + mat[4];
   double ty = mat[1] + mat[3] + mat[5];
   writePSFmt(" rect=\"%g %g %g %g\"", mat[4], mat[5], tx, ty);
