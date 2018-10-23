@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
   if (argc == 3) {
     xmlFileName = new GooString(argv[2]);
   } else {
-    char *p = fileName->getCString() + fileName->getLength() - 4;
+    const char *p = fileName->getCString() + fileName->getLength() - 4;
     if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")) {
       xmlFileName = new GooString(fileName->getCString(),
 				  fileName->getLength() - 4);
