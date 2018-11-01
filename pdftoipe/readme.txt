@@ -65,8 +65,11 @@ If you want to compile pdftoipe on Windows, please refer to
 Changes
 =======
 
+ * 2018/11/01
+   Poppler keeps changing: gBool -> bool (issue #31).
+
  * 2018/10/23
-   Const changes to compile with poppler 0.70 (bug #30).
+   Const changes to compile with poppler 0.70 (issue #30).
 
  * 2018/09/24
    Removed Object::memCheck call to compile with poppler 0.69 (bug
