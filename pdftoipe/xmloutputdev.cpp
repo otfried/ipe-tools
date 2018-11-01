@@ -31,13 +31,13 @@ XmlOutputDev::XmlOutputDev(const char *fileName, XRef *xrefA, Catalog *catalog,
 
   if (!(f = fopen(fileName, "wb"))) {
     fprintf(stderr, "Couldn't open output file '%s'\n", fileName);
-    ok = gFalse;
+    ok = false;
     return;
   }
   outputStream = f;
 
   // initialize
-  ok = gTrue;
+  ok = true;
   xref = xrefA;
   inText = false;
   iUnicode = false;
@@ -98,9 +98,9 @@ XmlOutputDev::~XmlOutputDev()
 
 // ----------------------------------------------------------
 
-void XmlOutputDev::setTextHandling(GBool math, GBool notext, 
-				   GBool literal, int mergeLevel,
-				   int unicodeLevel)
+void XmlOutputDev::setTextHandling(bool math, bool notext, 
+                                   bool literal, int mergeLevel,
+                                   int unicodeLevel)
 {
   iIsMath = math;
   iNoText = notext;
@@ -323,9 +323,9 @@ void XmlOutputDev::finishText()
 // --------------------------------------------------------------------
 
 void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
-			     int width, int height, GfxImageColorMap *colorMap,
-			     GBool interpolate, int *maskColors, 
-			     GBool inlineImg)
+                             int width, int height, GfxImageColorMap *colorMap,
+                             bool interpolate, int *maskColors, 
+                             bool inlineImg)
 {
   finishText();
 
