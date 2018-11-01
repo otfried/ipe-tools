@@ -46,9 +46,9 @@ option) any later version.
 Compiling
 =========
 
-You need the Poppler library (http://poppler.freedesktop.org).  On
-Debian/Ubuntu, install the packages 'libpoppler-dev' and
-'libpoppler-private-dev'. 
+You need the Poppler library (http://poppler.freedesktop.org) v0.71.0
+or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev'
+and 'libpoppler-private-dev'.
 
 In source directory, say
 

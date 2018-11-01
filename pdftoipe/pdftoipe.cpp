@@ -29,11 +29,11 @@ static int mergeLevel = 0;
 static int unicodeLevel = 1;
 static char ownerPassword[33] = "";
 static char userPassword[33] = "";
-static GBool quiet = gFalse;
-static GBool printHelp = gFalse;
-static GBool math = gFalse;
-static GBool literal = gFalse;
-static GBool notext = gFalse;
+static bool quiet = false;
+static bool printHelp = false;
+static bool math = false;
+static bool literal = false;
+static bool notext = false;
 
 static ArgDesc argDesc[] = {
   {"-f",      argInt,      &firstPage,      0,
@@ -70,7 +70,7 @@ static ArgDesc argDesc[] = {
 int main(int argc, char *argv[])
 {
   // parse args
-  GBool ok = parseArgs(argDesc, &argc, argv);
+  bool ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp) {
     fprintf(stderr, "pdftoipe version %s\n", PDFTOIPE_VERSION);
     printUsage("pdftoipe", "<PDF-file> [<XML-file>]", argDesc);
@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
   if (xmlOut->isOk()) {
     doc->displayPages(xmlOut, firstPage, lastPage, 
 		      // double hDPI, double vDPI, int rotate,
-		      // GBool useMediaBox, GBool crop, GBool printing,
-		      72.0, 72.0, 0, gFalse, gFalse, gFalse);
+		      // bool useMediaBox, bool crop, bool printing,
+		      72.0, 72.0, 0, false, false, false);
     exitCode = 0;
   }
 
