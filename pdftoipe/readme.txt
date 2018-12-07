@@ -46,7 +46,7 @@ option) any later version.
 Compiling
 =========
 
-You need the Poppler library (http://poppler.freedesktop.org) v0.71.0
+You need the Poppler library (http://poppler.freedesktop.org) v0.72.0
 or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev'
 and 'libpoppler-private-dev'.
 
@@ -55,7 +55,7 @@ In source directory, say
 make
 
 This will create the single executable "pdftoipe".  Copy it to
-whereever you like.  You may also install the man page "pdftoipe.1".
+wherever you like.  You may also install the man page "pdftoipe.1".
 
 If you want to compile pdftoipe on Windows, please refer to
 "compile_on_windows.pdf", written by Daniel Beckmann.
@@ -65,7 +65,12 @@ If you want to compile pdftoipe on Windows, please refer to
 Changes
 =======
 
- * 2018/11/01
+ * 2018/12/07
+   Changes to compile with poppler 0.72.0. GString is now based on
+   std::string and may be gettng deprecated soon so get rid of some
+   uses.
+
+* 2018/11/01
    Poppler keeps changing: gBool -> bool (issue #31).
 
  * 2018/10/23
