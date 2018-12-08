@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#include <string>
+
 #include "Object.h"
 #include "Error.h"
 #include "Gfx.h"
@@ -24,13 +26,13 @@
 // XmlOutputDev
 //------------------------------------------------------------------------
 
-XmlOutputDev::XmlOutputDev(const char *fileName, XRef *xrefA, Catalog *catalog,
-			   int firstPage, int lastPage)
+XmlOutputDev::XmlOutputDev(const std::string& fileName, XRef *xrefA, Catalog *catalog,
+                           int firstPage, int lastPage)
 {
   FILE *f;
 
-  if (!(f = fopen(fileName, "wb"))) {
-    fprintf(stderr, "Couldn't open output file '%s'\n", fileName);
+  if (!(f = fopen(fileName.c_str(), "wb"))) {
+    fprintf(stderr, "Couldn't open output file '%s'\n", fileName.c_str());
     ok = false;
     return;
   }

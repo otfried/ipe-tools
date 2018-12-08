@@ -104,18 +104,18 @@ int main(int argc, char *argv[])
     return 1;
   
   // construct XML file name
-  GooString *xmlFileName;
+  std::string xmlFileName;
   if (argc == 3) {
-    xmlFileName = new GooString(argv[2]);
+    xmlFileName = argv[2];
   } else {
-    const char *p = fileName->getCString() + fileName->getLength() - 4;
+    const char *p = fileName->c_str() + fileName->getLength() - 4;
     if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")) {
-      xmlFileName = new GooString(fileName->getCString(),
-				  fileName->getLength() - 4);
+        xmlFileName = std::string(fileName->c_str(),
+                                  fileName->getLength() - 4);
     } else {
-      xmlFileName = fileName->copy();
+      xmlFileName = fileName->c_str();
     }
-    xmlFileName->append(".ipe");
+    xmlFileName += ".ipe";
   }
 
   // get page range
@@ -127,8 +127,8 @@ int main(int argc, char *argv[])
 
   // write XML file
   XmlOutputDev *xmlOut = 
-    new XmlOutputDev(xmlFileName->getCString(), doc->getXRef(),
-		     doc->getCatalog(), firstPage, lastPage);
+    new XmlOutputDev(xmlFileName, doc->getXRef(),
+                     doc->getCatalog(), firstPage, lastPage);
 
   // tell output device about text handling
   xmlOut->setTextHandling(math, notext, literal, mergeLevel, unicodeLevel);
@@ -152,7 +152,6 @@ int main(int argc, char *argv[])
 
   // clean up
   delete xmlOut;
-  delete xmlFileName;
   delete doc;
   delete globalParams;
 

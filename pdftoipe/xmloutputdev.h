@@ -14,14 +14,14 @@
 class GfxPath;
 class GfxFont;
 
-#define PDFTOIPE_VERSION "2018/11/01"
+#define PDFTOIPE_VERSION "2018/12/07"
 
 class XmlOutputDev : public OutputDev
 {
 public:
 
   // Open an XML output file, and write the prolog.
-  XmlOutputDev(const char *fileName, XRef *xrefA, Catalog *catalog,
+  XmlOutputDev(const std::string& fileName, XRef *xrefA, Catalog *catalog,
                int firstPage, int lastPage);
   
   // Destructor -- writes the trailer and closes the file.
