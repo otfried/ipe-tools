@@ -6,3 +6,5 @@ build
 *.AppImage
 AppImageKit
 Ipe.AppDir
+*.pyc
+*.snap

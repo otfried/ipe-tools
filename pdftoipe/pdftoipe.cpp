@@ -29,11 +29,11 @@ static int mergeLevel = 0;
 static int unicodeLevel = 1;
 static char ownerPassword[33] = "";
 static char userPassword[33] = "";
-static GBool quiet = gFalse;
-static GBool printHelp = gFalse;
-static GBool math = gFalse;
-static GBool literal = gFalse;
-static GBool notext = gFalse;
+static bool quiet = false;
+static bool printHelp = false;
+static bool math = false;
+static bool literal = false;
+static bool notext = false;
 
 static ArgDesc argDesc[] = {
   {"-f",      argInt,      &firstPage,      0,
@@ -70,7 +70,7 @@ static ArgDesc argDesc[] = {
 int main(int argc, char *argv[])
 {
   // parse args
-  GBool ok = parseArgs(argDesc, &argc, argv);
+  bool ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp) {
     fprintf(stderr, "pdftoipe version %s\n", PDFTOIPE_VERSION);
     printUsage("pdftoipe", "<PDF-file> [<XML-file>]", argDesc);
@@ -104,18 +104,18 @@ int main(int argc, char *argv[])
     return 1;
   
   // construct XML file name
-  GooString *xmlFileName;
+  std::string xmlFileName;
   if (argc == 3) {
-    xmlFileName = new GooString(argv[2]);
+    xmlFileName = argv[2];
   } else {
-    char *p = fileName->getCString() + fileName->getLength() - 4;
+    const char *p = fileName->c_str() + fileName->getLength() - 4;
     if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")) {
-      xmlFileName = new GooString(fileName->getCString(),
-				  fileName->getLength() - 4);
+        xmlFileName = std::string(fileName->c_str(),
+                                  fileName->getLength() - 4);
     } else {
-      xmlFileName = fileName->copy();
+      xmlFileName = fileName->c_str();
     }
-    xmlFileName->append(".ipe");
+    xmlFileName += ".ipe";
   }
 
   // get page range
@@ -127,8 +127,8 @@ int main(int argc, char *argv[])
 
   // write XML file
   XmlOutputDev *xmlOut = 
-    new XmlOutputDev(xmlFileName->getCString(), doc->getXRef(),
-		     doc->getCatalog(), firstPage, lastPage);
+    new XmlOutputDev(xmlFileName, doc->getXRef(),
+                     doc->getCatalog(), firstPage, lastPage);
 
   // tell output device about text handling
   xmlOut->setTextHandling(math, notext, literal, mergeLevel, unicodeLevel);
@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
   if (xmlOut->isOk()) {
     doc->displayPages(xmlOut, firstPage, lastPage, 
 		      // double hDPI, double vDPI, int rotate,
-		      // GBool useMediaBox, GBool crop, GBool printing,
-		      72.0, 72.0, 0, gFalse, gFalse, gFalse);
+		      // bool useMediaBox, bool crop, bool printing,
+		      72.0, 72.0, 0, false, false, false);
     exitCode = 0;
   }
 
@@ -152,13 +152,8 @@ int main(int argc, char *argv[])
 
   // clean up
   delete xmlOut;
-  delete xmlFileName;
   delete doc;
   delete globalParams;
-
-  // check for memory leaks
-  Object::memCheck(stderr);
-  gMemReport(stderr);
 
   return exitCode;
 }

@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#include <string>
+
 #include "Object.h"
 #include "Error.h"
 #include "Gfx.h"
@@ -24,20 +26,20 @@
 // XmlOutputDev
 //------------------------------------------------------------------------
 
-XmlOutputDev::XmlOutputDev(char *fileName, XRef *xrefA, Catalog *catalog,
-			   int firstPage, int lastPage)
+XmlOutputDev::XmlOutputDev(const std::string& fileName, XRef *xrefA, Catalog *catalog,
+                           int firstPage, int lastPage)
 {
   FILE *f;
 
-  if (!(f = fopen(fileName, "wb"))) {
-    fprintf(stderr, "Couldn't open output file '%s'\n", fileName);
-    ok = gFalse;
+  if (!(f = fopen(fileName.c_str(), "wb"))) {
+    fprintf(stderr, "Couldn't open output file '%s'\n", fileName.c_str());
+    ok = false;
     return;
   }
   outputStream = f;
 
   // initialize
-  ok = gTrue;
+  ok = true;
   xref = xrefA;
   inText = false;
   iUnicode = false;
@@ -63,8 +65,8 @@ XmlOutputDev::XmlOutputDev(char *fileName, XRef *xrefA, Catalog *catalog,
   }
   */
 
-  PDFRectangle *media = page->getMediaBox();
-  PDFRectangle *crop = page->getCropBox();
+  const PDFRectangle *media = page->getMediaBox();
+  const PDFRectangle *crop = page->getCropBox();
 
   fprintf(stderr, "MediaBox: %g %g %g %g (%g x %g)\n", 
 	  media->x1, media->x2, media->y1, media->y2, wid, ht);
@@ -98,9 +100,9 @@ XmlOutputDev::~XmlOutputDev()
 
 // ----------------------------------------------------------
 
-void XmlOutputDev::setTextHandling(GBool math, GBool notext, 
-				   GBool literal, int mergeLevel,
-				   int unicodeLevel)
+void XmlOutputDev::setTextHandling(bool math, bool notext, 
+                                   bool literal, int mergeLevel,
+                                   int unicodeLevel)
 {
   iIsMath = math;
   iNoText = notext;
@@ -282,8 +284,8 @@ void XmlOutputDev::startText(GfxState *state, double x, double y)
   double xt, yt;
   state->transform(x, y, &xt, &yt);
 
-  double *T = state->getTextMat();
-  double *C = state->getCTM();
+  const double *T = state->getTextMat();
+  const double *C = state->getCTM();
 
   /*
   fprintf(stderr, "TextMatrix = %g %g %g %g %g %g\n", 
@@ -323,9 +325,9 @@ void XmlOutputDev::finishText()
 // --------------------------------------------------------------------
 
 void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
-			     int width, int height, GfxImageColorMap *colorMap,
-			     GBool interpolate, int *maskColors, 
-			     GBool inlineImg)
+                             int width, int height, GfxImageColorMap *colorMap,
+                             bool interpolate, int *maskColors, 
+                             bool inlineImg)
 {
   finishText();
 
@@ -337,8 +339,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
 
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
 
-  double *mat;
-  mat = state->getCTM();
+  const double *mat = state->getCTM();
   double tx = mat[0] + mat[2] + mat[4];
   double ty = mat[1] + mat[3] + mat[5];
   writePSFmt(" rect=\"%g %g %g %g\"", mat[4], mat[5], tx, ty);
@@ -611,7 +612,7 @@ void XmlOutputDev::writeColor(const char *prefix, const GfxRGB &rgb,
 {
   if (prefix)
     writePS(prefix);
-  writePSFmt("\"%g %g %g\"", colToDbl(rgb.r), colToDbl(rgb.g), colToDbl(rgb.b));
+  writePSFmt("\"%f %f %f\"", colToDbl(rgb.r), colToDbl(rgb.g), colToDbl(rgb.b));
   if (suffix)
     writePS(suffix);
 }

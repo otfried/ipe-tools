@@ -14,39 +14,39 @@
 class GfxPath;
 class GfxFont;
 
-#define PDFTOIPE_VERSION "2014/03/03"
+#define PDFTOIPE_VERSION "2018/12/07"
 
 class XmlOutputDev : public OutputDev
 {
 public:
 
   // Open an XML output file, and write the prolog.
-  XmlOutputDev(char *fileName, XRef *xrefA, Catalog *catalog,
-	       int firstPage, int lastPage);
+  XmlOutputDev(const std::string& fileName, XRef *xrefA, Catalog *catalog,
+               int firstPage, int lastPage);
   
   // Destructor -- writes the trailer and closes the file.
   virtual ~XmlOutputDev();
 
   // Check if file was successfully created.
-  virtual GBool isOk() { return ok; }
+  virtual bool isOk() { return ok; }
 
   bool hasUnicode() const { return iUnicode; }
 
-  void setTextHandling(GBool math, GBool notext, GBool literal,
-		       int mergeLevel, int unicodeLevel);
+  void setTextHandling(bool math, bool notext, bool literal,
+                       int mergeLevel, int unicodeLevel);
   
   //---- get info about output device
 
   // Does this device use upside-down coordinates?
   // (Upside-down means (0,0) is the top left corner of the page.)
-  virtual GBool upsideDown() { return gFalse; }
+  virtual bool upsideDown() { return false; }
 
   // Does this device use drawChar() or drawString()?
-  virtual GBool useDrawChar() { return gTrue; }
+  virtual bool useDrawChar() { return true; }
 
   // Does this device use beginType3Char/endType3Char?  Otherwise,
   // text in Type 3 fonts will be drawn with drawChar/drawString.
-  virtual GBool interpretType3Chars() { return gFalse; }
+  virtual bool interpretType3Chars() { return false; }
 
   //----- initialization and control
 
@@ -75,7 +75,7 @@ public:
   //----- image drawing
   virtual void drawImage(GfxState *state, Object *ref, Stream *str,
 			 int width, int height, GfxImageColorMap *colorMap,
-			 GBool interpolate, int *maskColors, GBool inlineImg);
+			 bool interpolate, int *maskColors, bool inlineImg);
 
 protected:
   virtual void startDrawingPath();
@@ -93,7 +93,7 @@ protected:
   FILE *outputStream;
   int seqPage;			// current sequential page number
   XRef *xref;			// the xref table for this PDF file
-  GBool ok;			// set up ok?
+  bool ok;			    // set up ok?
   bool iUnicode;                // has a Unicode character been used?
 
   bool iIsLiteral;              // take latex in text literally

@@ -1,5 +1,5 @@
 name: ipe
-version: 7.2.6
+version: 7.2.7
 summary: Ipe http://ipe.otfried.org/
 description: Drawing editor for creating figures in PDF format.
   Ipe supports making small figures for inclusion into LaTeX
@@ -25,7 +25,7 @@ confinement: strict
 
 parts:
   ipe:
-    source: https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.6-src.tar.gz
+    source: https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.7-src.tar.gz
     source-subdir: src
     plugin: make
     make-parameters:
@@ -58,7 +58,7 @@ parts:
     source: http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
     build-packages:
       - wget
-    snap:
+    prime:
       - -texlive/texmf-dist/doc
       - -texlive/texmf-dist/source
       - -texlive/texmf-dist/tex/context
@@ -122,4 +122,3 @@ apps:
   sh:
     command: wrapper.sh sh
     plugs: [home]
-

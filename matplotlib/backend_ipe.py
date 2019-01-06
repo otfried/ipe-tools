@@ -286,7 +286,7 @@ class RendererIpe(RendererBase):
         
         offs, dl = gc.get_dashes()
         attrib = {}
-        if offs != None:
+        if offs != None and dl != None:
             if type(dl) == float:
                 dashes = "[%g] %g" % (dl, offs)
             else:

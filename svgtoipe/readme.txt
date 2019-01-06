@@ -42,7 +42,7 @@ direct Email.
 
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2015 Otfried Cheong
+Copyright (C) 2009-2016 Otfried Cheong
 
 svgtoipe is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -63,6 +63,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 Changes
 =======
+
+ * 2016/12/09
+   Command line argument to generate Ipe selection format, ability to
+   read/write stdin/stdout (thanks to Christian Kapeller).
 
  * 2013/11/07
    Bugs in path parsing and Latex generation fixed by Will Evans.

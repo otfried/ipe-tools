@@ -10,7 +10,7 @@ ifdef COMSPEC
   TARGET = pdftoipe.exe	
 else ifdef IPECROSS
   # cross-compiling for Windows?
-  CXX=i686-w64-mingw32-g++
+  CXX=x86_64-w64-mingw32-g++
   CPPFLAGS += -I/sw/mingwlibs/include/poppler
   LIBS += -L/sw/mingwlibs/lib -lpoppler
   LDFLAGS += -static
@@ -23,7 +23,7 @@ else
   TARGET   = pdftoipe
 endif
 
-CXXFLAGS += -Wno-write-strings
+CXXFLAGS += -Wno-write-strings -std=c++11
 
 all: $(TARGET)
 

@@ -32,14 +32,14 @@
 /* #include "goo/gstrtod.h" */
 
 static const ArgDesc *findArg(const ArgDesc *args, char *arg);
-static GBool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]);
+static bool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]);
 
-GBool parseArgs(const ArgDesc *args, int *argc, char *argv[]) {
+bool parseArgs(const ArgDesc *args, int *argc, char *argv[]) {
   const ArgDesc *arg;
   int i, j;
-  GBool ok;
+  bool ok;
 
-  ok = gTrue;
+  ok = true;
   i = 1;
   while (i < *argc) {
     if (!strcmp(argv[i], "--")) {
@@ -49,7 +49,7 @@ GBool parseArgs(const ArgDesc *args, int *argc, char *argv[]) {
       break;
     } else if ((arg = findArg(args, argv[i]))) {
       if (!grabArg(arg, i, argc, argv))
-	ok = gFalse;
+	ok = false;
     } else {
       ++i;
     }
@@ -112,16 +112,16 @@ static const ArgDesc *findArg(const ArgDesc *args, char *arg) {
   return NULL;
 }
 
-static GBool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]) {
+static bool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]) {
   int n;
   int j;
-  GBool ok;
+  bool ok;
 
-  ok = gTrue;
+  ok = true;
   n = 0;
   switch (arg->kind) {
   case argFlag:
-    *(GBool *)arg->val = gTrue;
+    *(bool *)arg->val = true;
     n = 1;
     break;
   case argInt:
@@ -129,7 +129,7 @@ static GBool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]) {
       *(int *)arg->val = atoi(argv[i+1]);
       n = 2;
     } else {
-      ok = gFalse;
+      ok = false;
       n = 1;
     }
     break;
@@ -138,7 +138,7 @@ static GBool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]) {
       *(double *)arg->val = atof(argv[i+1]);
       n = 2;
     } else {
-      ok = gFalse;
+      ok = false;
       n = 1;
     }
     break;
@@ -148,7 +148,7 @@ static GBool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]) {
       ((char *)arg->val)[arg->size - 1] = '\0';
       n = 2;
     } else {
-      ok = gFalse;
+      ok = false;
       n = 1;
     }
     break;
@@ -165,17 +165,17 @@ static GBool grabArg(const ArgDesc *arg, int i, int *argc, char *argv[]) {
   return ok;
 }
 
-GBool isInt(char *s) {
+bool isInt(char *s) {
   if (*s == '-' || *s == '+')
     ++s;
   while (isdigit(*s))
     ++s;
   if (*s)
-    return gFalse;
-  return gTrue;
+    return false;
+  return true;
 }
 
-GBool isFP(char *s) {
+bool isFP(char *s) {
   int n;
 
   if (*s == '-' || *s == '+')
@@ -197,12 +197,12 @@ GBool isFP(char *s) {
       ++s;
     n = 0;
     if (!isdigit(*s))
-      return gFalse;
+      return false;
     do {
       ++s;
     } while (isdigit(*s));
   }
   if (*s)
-    return gFalse;
-  return gTrue;
+    return false;
+  return true;
 }
