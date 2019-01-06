@@ -7,7 +7,7 @@ set -e
 source /opt/rh/devtoolset-2/enable
 
 BASE=`pwd`
-IPE=ipe-7.2.6
+IPE=ipe-7.2.8
 
 APP_DIR=$BASE/Ipe.AppDir
 APP_IMAGE=$BASE/$IPE-x86_64.AppImage
