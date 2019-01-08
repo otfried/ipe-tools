@@ -332,7 +332,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   finishText();
 
   ImageStream *imgStr;
-  Guchar *p;
+  unsigned char *p;
   GfxRGB rgb;
   int x, y;
   int c;
