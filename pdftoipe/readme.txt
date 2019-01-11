@@ -57,8 +57,7 @@ make
 This will create the single executable "pdftoipe".  Copy it to
 wherever you like.  You may also install the man page "pdftoipe.1".
 
-To compile with poppler <= v0.68, check out commit
-273130194cff3fafcd29ca96ceab20be3fcceb0a from git.
+To compile with poppler <= v0.68, check out branch "old-poppler".
 
 If you want to compile pdftoipe on Windows, please refer to
 "compile_on_windows.pdf", written by Daniel Beckmann.
