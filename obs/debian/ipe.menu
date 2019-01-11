@@ -1,0 +1,2 @@
+?package(ipe):needs="X11" section="Applications/Graphics"\
+  title="Ipe" command="/usr/bin/ipe"

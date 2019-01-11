@@ -16,6 +16,7 @@ build:
    - pkgconfig(libjpeg)
    - pkgconfig(freetype2)
    - pkgconfig(cairo)
+   - pkgconfig(poppler)
 
   # resources which will become available as part of the source. The "appimage" source service
   # needs to be enabled to process these.
@@ -28,14 +29,25 @@ build:
 # - $BUILD_SOURCE_DIR point to the source directory
 # - $BUILD_APPDIR point to the AppDir. This directory will become the content of the AppImage
 script:
+  # Build qhull
   - cd $BUILD_SOURCE_DIR
-  - ls -l ..
+  - tar xfvz qhull-2015-src-7.2.0.tgz
+  - cd qhull-2015.2
+  - make
+  - install -d /usr/include/qhull_r
+  - install -m 0644 src/libqhull_r/*.h /usr/include/qhull_r
+  - install -m 0755 lib/libqhullstatic_r.a /usr/lib
+  # Build Ipe
+  - cd $BUILD_SOURCE_DIR
   - tar xzf ipe-7.2.8-src.tar.gz
   - cd ipe-7.2.8
   - cd src
   - export LUA_CFLAGS=`pkg-config --cflags lua`
   - export LUA_LIBS=`pkg-config --libs lua`
+  - export QHULL_CFLAGS="-I/usr/local/include/qhull_r"
+  - export QHULL_LIBS="-lqhullstatic_r"
   - export IPEPREFIX=$BUILD_APPDIR/usr
+  - export IPEQVORONOI=1
   - export MOC=moc-qt5
   - make IPEAPPIMAGE=1
   - make install IPEAPPIMAGE=1
@@ -44,7 +56,13 @@ script:
   - cp Ipe.desktop $BUILD_APPDIR
   - cp startipe.sh $BUILD_APPDIR/usr/bin
   - cp appimage.lua $BUILD_APPDIR/usr/ipe/ipelets
+  - mkdir -p $BUILD_APPDIR/usr/share/metainfo
   - cp Ipe.appdata.xml $BUILD_APPDIR/usr/share/metainfo
+  # Build pdftoipe
+  - cd $BUILD_SOURCE_DIR/ipe-tools/pdftoipe
+  - make
+  - install -m 0755 pdftoipe $BUILD_APPDIR/usr/bin
+  # include dependencies
   - mkdir -p $BUILD_APPDIR/usr/lib/qt5
   - cp -R /usr/lib64/qt5/plugins $BUILD_APPDIR/usr/lib/qt5/
   - set +e
@@ -104,6 +122,5 @@ script:
   - rm -f $BUILD_APPDIR/usr/lib/libuuid.so.1 || true
   - rm -f $BUILD_APPDIR/usr/lib/libwind.so.0 || true
   - rm -f $BUILD_APPDIR/usr/lib/libz.so.1 || true
-  - rm -fr $BUILD_APPDIR/.build.binaries
   # Show what we have done
   - find $BUILD_APPDIR/

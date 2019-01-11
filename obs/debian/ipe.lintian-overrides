@@ -1,0 +1,3 @@
+# Several scripts use the non-standard interpreter ipescript, shipped in package ipe.
+#
+ipe: unusual-interpreter 

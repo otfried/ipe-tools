@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export IPEPREFIX=/usr
+export INSTALL_ROOT=$(shell pwd)/debian/tmp
+
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+
+# Tell qtchooser which version we want.
+export QT_SELECT=qt5
+
+%:
+	rm -f build/doc/jquery.js
+	dh $@ --sourcedirectory=src
+
+override_dh_install: 
+	dh_install
+	dh_install -plibipe debian/tmp/usr/lib/lib*.so.* usr/lib

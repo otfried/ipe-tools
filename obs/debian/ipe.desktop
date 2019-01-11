@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ipe drawing editor
+GenericName=PDF Figure Editor
+Comment=Create your drawings in PDF format
+Exec=ipe
+Icon=ipe
+Terminal=false
+Categories=Graphics;2DGraphics;RasterGraphics;
+StartupNotify=true
