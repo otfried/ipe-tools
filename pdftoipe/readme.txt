@@ -46,7 +46,7 @@ option) any later version.
 Compiling
 =========
 
-You need the Poppler library (http://poppler.freedesktop.org) v0.72.0
+You need the Poppler library (http://poppler.freedesktop.org) v0.73.0
 or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev'
 and 'libpoppler-private-dev'.
 
@@ -57,6 +57,9 @@ make
 This will create the single executable "pdftoipe".  Copy it to
 wherever you like.  You may also install the man page "pdftoipe.1".
 
+To compile with poppler <= v0.68, check out commit
+273130194cff3fafcd29ca96ceab20be3fcceb0a from git.
+
 If you want to compile pdftoipe on Windows, please refer to
 "compile_on_windows.pdf", written by Daniel Beckmann.
 
@@ -64,6 +67,9 @@ If you want to compile pdftoipe on Windows, please refer to
 
 Changes
 =======
+
+ * 2019/01/08
+   More changes to compile with poppler 0.73.0.
 
  * 2018/12/07
    Changes to compile with poppler 0.72.0. GString is now based on

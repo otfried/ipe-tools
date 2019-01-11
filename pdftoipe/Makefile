@@ -10,9 +10,9 @@ ifdef COMSPEC
   TARGET = pdftoipe.exe	
 else ifdef IPECROSS
   # cross-compiling for Windows?
-  CXX=x86_64-w64-mingw32-g++
-  CPPFLAGS += -I/sw/mingwlibs/include/poppler
-  LIBS += -L/sw/mingwlibs/lib -lpoppler
+  CXX=$(IPECROSS)-w64-mingw32-g++
+  CPPFLAGS += -I/sw/mingwlibs-$(IPECROSS)/include/poppler
+  LIBS += -L/sw/mingwlibs-$(IPECROSS)/lib -lpoppler
   LDFLAGS += -static
   TARGET = pdftoipe.exe	
 else
