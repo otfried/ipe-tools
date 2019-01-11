@@ -1,0 +1,110 @@
+#
+# This is an attempt to build an AppImage for Ipe in openSuse Build Service (OBS)
+#
+
+app: ipe
+
+build:
+  # packages which get installed in the build enviroment. Not part of the resulting image.
+  packages:
+   - linuxdeployqt
+   - libqt5-qtbase-devel
+   - liblua5_2
+   - zlib-devel
+   - Lua(devel)
+   - pkgconfig(libpng)
+   - pkgconfig(libjpeg)
+   - pkgconfig(freetype2)
+   - pkgconfig(cairo)
+
+  # resources which will become available as part of the source. The "appimage" source service
+  # needs to be enabled to process these.
+  git:
+   - https://github.com/otfried/ipe-tools.git
+   # files don't work yet
+   #  files:
+   #   - https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.8-src.tar.gz
+
+# - $BUILD_SOURCE_DIR point to the source directory
+# - $BUILD_APPDIR point to the AppDir. This directory will become the content of the AppImage
+script:
+  - cd $BUILD_SOURCE_DIR
+  - ls -l ..
+  - tar xzf ipe-7.2.8-src.tar.gz
+  - cd ipe-7.2.8
+  - cd src
+  - export LUA_CFLAGS=`pkg-config --cflags lua`
+  - export LUA_LIBS=`pkg-config --libs lua`
+  - export IPEPREFIX=$BUILD_APPDIR/usr
+  - export MOC=moc-qt5
+  - make IPEAPPIMAGE=1
+  - make install IPEAPPIMAGE=1
+  - cd $BUILD_SOURCE_DIR/ipe-tools/appimage
+  - cp ipe.png $BUILD_APPDIR
+  - cp Ipe.desktop $BUILD_APPDIR
+  - cp startipe.sh $BUILD_APPDIR/usr/bin
+  - cp appimage.lua $BUILD_APPDIR/usr/ipe/ipelets
+  - mkdir -p $BUILD_APPDIR/usr/bin/platforms
+  - mkdir -p $BUILD_APPDIR/usr/lib/qt5
+  - cp -R /usr/lib64/qt5/plugins $BUILD_APPDIR/usr/lib/qt5/
+  # cp $BUILD_APPDIR/usr/lib/qt5/plugins/platforms/libqxcb.so $BUILD_APPDIR/usr/bin/platforms/
+  - set +e
+  # ldd $BUILD_APPDIR/usr/lib/qt5/plugins/platforms/libqxcb.so | grep "=>" | awk '{print $3}' | xargs -I '{}' cp -v '{}' $BUILD_APPDIR/usr/lib
+  - ldd $BUILD_APPDIR/usr/bin/* | grep "=>" | awk '{print $3}' | xargs -I '{}' cp -v '{}' $BUILD_APPDIR/usr/lib 
+  - find $BUILD_APPDIR/usr/lib -name "*.so*" | xargs ldd | grep "=>" | awk '{print $3}' | xargs -I '{}' cp -v '{}' $BUILD_APPDIR/usr/lib 
+  - set -e
+  # this prevents "symbol lookup error libunity-gtk-module.so: undefined symbol: g_settings_new" on ubuntu 14.04
+  - rm -f $BUILD_APPDIR/usr/lib/qt5/plugins/platformthemes/libqgtk2.so || true 
+  - rmdir $BUILD_APPDIR/usr/lib/qt5/plugins/platformthemes || true # should be empty after deleting libqgtk2.so
+  - rm -f $BUILD_APPDIR/usr/lib/libgio* || true # these are not needed if we don't use gtk
+  # Removed unused parts of Qt
+  - rm -f $BUILD_APPDIR/usr/lib/libQt5PrintSupport.so.5 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libQt5Network.so.5 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libQt5Sql.so.5 || true
+  # Delete potentially dangerous libraries
+  - rm -f $BUILD_APPDIR/usr/lib/libstdc* $BUILD_APPDIR/usr/lib/libgobject* $BUILD_APPDIR/usr/lib/libc.so.* || true
+  # The following are assumed to be part of the base system
+  - rm -f $BUILD_APPDIR/usr/lib/libgtk-x11-2.0.so.0 || true # this prevents Gtk-WARNINGS about missing themes
+  - rm -f $BUILD_APPDIR/usr/lib/libdbus-1.so.3 || true # this prevents '/var/lib/dbus/machine-id' error on fedora 22/23 live cd
+  - rm -f $BUILD_APPDIR/usr/lib/libGL.so.* || true
+  - rm -f $BUILD_APPDIR/usr/lib/libdrm.so.* || true
+  - rm -f $BUILD_APPDIR/usr/lib/libxcb.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libX11.so.6 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libcom_err.so.2 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libcrypt.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libdl.so.2 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libexpat.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libfontconfig.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libgcc_s.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libglib-2.0.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libgpg-error.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libgssapi_krb5.so.2 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libgssapi.so.3 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libhcrypto.so.4 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libheimbase.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libheimntlm.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libhx509.so.5 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libICE.so.6 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libidn.so.11 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libk5crypto.so.3 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libkeyutils.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libkrb5.so.26 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libkrb5.so.3 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libkrb5support.so.0 || true
+  # rm -f $BUILD_APPDIR/usr/lib/liblber-2.4.so.2 || true # needed for debian wheezy
+  # rm -f $BUILD_APPDIR/usr/lib/libldap_r-2.4.so.2 || true # needed for debian wheezy
+  - rm -f $BUILD_APPDIR/usr/lib/libm.so.6 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libp11-kit.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libpcre.so.3 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libpthread.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libresolv.so.2 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libroken.so.18 || true
+  - rm -f $BUILD_APPDIR/usr/lib/librt.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libsasl2.so.2 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libSM.so.6 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libusb-1.0.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libuuid.so.1 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libwind.so.0 || true
+  - rm -f $BUILD_APPDIR/usr/lib/libz.so.1 || true
+  # Show what we have done
+  - find $BUILD_APPDIR/

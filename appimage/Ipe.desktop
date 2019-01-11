@@ -2,7 +2,7 @@
 Type=Application
 Name=Ipe
 GenericName=drawing program
-Icon=ipe.png
+Icon=ipe
 Exec=startipe.sh
 Terminal=false
 Categories=Graphics;
