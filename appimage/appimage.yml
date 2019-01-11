@@ -1,17 +1,17 @@
 #
-# This is an attempt to build an AppImage for Ipe in openSuse Build Service (OBS)
+# Building an AppImage for Ipe in openSuse Build Service (OBS)
 #
 
 app: ipe
+# binpatch: true
 
 build:
   # packages which get installed in the build enviroment. Not part of the resulting image.
   packages:
-   - linuxdeployqt
    - libqt5-qtbase-devel
    - liblua5_2
-   - zlib-devel
    - Lua(devel)
+   - zlib-devel
    - pkgconfig(libpng)
    - pkgconfig(libjpeg)
    - pkgconfig(freetype2)
@@ -44,12 +44,10 @@ script:
   - cp Ipe.desktop $BUILD_APPDIR
   - cp startipe.sh $BUILD_APPDIR/usr/bin
   - cp appimage.lua $BUILD_APPDIR/usr/ipe/ipelets
-  - mkdir -p $BUILD_APPDIR/usr/bin/platforms
+  - cp Ipe.appdata.xml $BUILD_APPDIR/usr/share/metainfo
   - mkdir -p $BUILD_APPDIR/usr/lib/qt5
   - cp -R /usr/lib64/qt5/plugins $BUILD_APPDIR/usr/lib/qt5/
-  # cp $BUILD_APPDIR/usr/lib/qt5/plugins/platforms/libqxcb.so $BUILD_APPDIR/usr/bin/platforms/
   - set +e
-  # ldd $BUILD_APPDIR/usr/lib/qt5/plugins/platforms/libqxcb.so | grep "=>" | awk '{print $3}' | xargs -I '{}' cp -v '{}' $BUILD_APPDIR/usr/lib
   - ldd $BUILD_APPDIR/usr/bin/* | grep "=>" | awk '{print $3}' | xargs -I '{}' cp -v '{}' $BUILD_APPDIR/usr/lib 
   - find $BUILD_APPDIR/usr/lib -name "*.so*" | xargs ldd | grep "=>" | awk '{print $3}' | xargs -I '{}' cp -v '{}' $BUILD_APPDIR/usr/lib 
   - set -e
@@ -106,5 +104,6 @@ script:
   - rm -f $BUILD_APPDIR/usr/lib/libuuid.so.1 || true
   - rm -f $BUILD_APPDIR/usr/lib/libwind.so.0 || true
   - rm -f $BUILD_APPDIR/usr/lib/libz.so.1 || true
+  - rm -fr $BUILD_APPDIR/.build.binaries
   # Show what we have done
   - find $BUILD_APPDIR/

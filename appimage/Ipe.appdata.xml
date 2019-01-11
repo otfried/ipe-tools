@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+​<!-- Copyright 2019 Otfried Cheong <otfried@ipe.airpost.net> -->
+​<component type="desktop-application">
+​  <id>org.otfried.ipe</id>
+​  <metadata_license>FSFAP</metadata_license>
+​  <project_license>GPL-3.0+</project_license>
+​  <name>Ipe</name>
+​  <summary>The Ipe extensible drawing editor</summary>
+​
+​  <description>
+    <p>Ipe is a drawing editor for creating figures in PDF format.  It supports making small figures for inclusion
+    into \LaTeX{}-documents as well as making multi-page PDF presentations.</p>
+
+    <p>Ipe's main features are:</p>
+    <ul>
+      <li> Entry of text as LaTeX source code. This makes it easy to
+      enter mathematical expressions, and to reuse the LaTeX-macros of
+      the main document.  In the display text is displayed as it will
+      appear in the figure.</li>
+      <li> Produces pure PDF, including the text. Ipe converts
+      the LaTeX-source to PDF when the file is saved.</li>
+      <li> It is easy to align objects with respect to each other (for
+      instance, to place a point on the intersection of two lines, or to
+      draw a circle through three given points) using various snapping
+      modes.</li>
+      <li> Users can provide ipelets (Ipe plug-ins) to add
+      functionality to Ipe.  This way, Ipe can be extended for each task
+      at hand.</li>
+    </ul>
+​  </description>
+​
+​  <launchable type="desktop-id">Ipe.desktop</launchable>
+​
+  <url type="homepage">http://ipe.otfried.org</url>
+
+  <developer_name>Otfried Cheong</developer_name>
+​
+​  <releases>
+​    <release version="7.2.8" date="2019-01-10" />
+​  </releases>
+​</component>
