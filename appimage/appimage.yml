@@ -16,15 +16,12 @@ build:
    - pkgconfig(libjpeg)
    - pkgconfig(freetype2)
    - pkgconfig(cairo)
-   - pkgconfig(poppler)
+  # - pkgconfig(poppler)
 
   # resources which will become available as part of the source. The "appimage" source service
   # needs to be enabled to process these.
   git:
    - https://github.com/otfried/ipe-tools.git
-   # files don't work yet
-   #  files:
-   #   - https://dl.bintray.com/otfried/generic/ipe/7.2/ipe-7.2.8-src.tar.gz
 
 # - $BUILD_SOURCE_DIR point to the source directory
 # - $BUILD_APPDIR point to the AppDir. This directory will become the content of the AppImage
@@ -44,7 +41,7 @@ script:
   - cd src
   - export LUA_CFLAGS=`pkg-config --cflags lua`
   - export LUA_LIBS=`pkg-config --libs lua`
-  - export QHULL_CFLAGS="-I/usr/local/include/qhull_r"
+  - export QHULL_CFLAGS="-I/usr/include/qhull_r"
   - export QHULL_LIBS="-lqhullstatic_r"
   - export IPEPREFIX=$BUILD_APPDIR/usr
   - export IPEQVORONOI=1
@@ -59,9 +56,10 @@ script:
   - mkdir -p $BUILD_APPDIR/usr/share/metainfo
   - cp Ipe.appdata.xml $BUILD_APPDIR/usr/share/metainfo
   # Build pdftoipe
-  - cd $BUILD_SOURCE_DIR/ipe-tools/pdftoipe
-  - make
-  - install -m 0755 pdftoipe $BUILD_APPDIR/usr/bin
+  # This currently doesn't work because HEAD on ipe-tools is for poppler >= 0.73 
+  #  - cd $BUILD_SOURCE_DIR/ipe-tools/pdftoipe
+  #  - make
+  #  - install -m 0755 pdftoipe $BUILD_APPDIR/usr/bin
   # include dependencies
   - mkdir -p $BUILD_APPDIR/usr/lib/qt5
   - cp -R /usr/lib64/qt5/plugins $BUILD_APPDIR/usr/lib/qt5/

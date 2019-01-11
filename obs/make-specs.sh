@@ -1,5 +1,5 @@
 #
-# Produce ipe.dsc and ipe_x.y.z-d_debian.tar.xz
+# Produce ipe.dsc and ipe_x.y.z-d.debian.tar.xz
 #
 
 IPEVERS="7.2.8"
@@ -8,8 +8,10 @@ DEBVERS="1"
 SOURCES=~/ipe-$IPEVERS-src.tar.gz
 
 ORIGFILE=ipe_$IPEVERS.orig.tar.gz
-DEBFILE=ipe_$IPEVERS-${DEBVERS}_debian.tar.xz
+DEBFILE=ipe_$IPEVERS-${DEBVERS}.debian.tar.xz
 DSCFILE=ipe.dsc
+
+rm -f $ORIGFILE $DEBFILE $DSCFILE
 
 tar cJvf $DEBFILE debian
 cat <<EOF > $DSCFILE
