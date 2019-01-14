@@ -21,6 +21,8 @@ from __future__ import division, print_function, unicode_literals
 
 import os, base64, tempfile, urllib, gzip, io, sys, codecs, re
 
+from six import string_types
+
 import matplotlib
 from matplotlib import rcParams
 from matplotlib._pylab_helpers import Gcf
@@ -28,7 +30,7 @@ from matplotlib.backend_bases import RendererBase, GraphicsContextBase
 from matplotlib.backend_bases import FigureManagerBase, FigureCanvasBase
 from matplotlib.figure import Figure
 from matplotlib.transforms import Bbox
-from matplotlib.cbook import is_string_like, is_writable_file_like, maxdict
+from matplotlib.cbook import is_writable_file_like, maxdict
 from matplotlib.path import Path
 
 from xml.sax.saxutils import escape as escape_xml_text
@@ -458,7 +460,7 @@ class FigureCanvasIpe(FigureCanvasBase):
     filetypes['ipe'] = 'Ipe 7 file format'
 
     def print_ipe(self, filename, *args, **kwargs):
-        if is_string_like(filename):
+        if isinstance(filename, string_types):
             fh_to_close = ipewriter = io.open(filename, 'w', encoding='utf-8')
         elif is_writable_file_like(filename):
             if not isinstance(filename, io.TextIOBase):
