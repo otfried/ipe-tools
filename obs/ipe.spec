@@ -5,29 +5,42 @@ Version:        7.2.8
 Release:        1
 Summary:        The Ipe extensible drawing editor
 Group:          Applications/Publishing
-# GPLv2, with an exception for the CGAL libraries.
-License:        GPLv2+ with exceptions
+License:        GNU General Public License v3.0 or later
 URL:            http://ipe.otfried.org/
 Source0:	%{name}-%{version}-src.tar.gz
 
-BuildRequires:	qt5-qtbase-devel
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig
-BuildRequires:  lua-devel >= 5.2
-BuildRequires:  cairo-devel
+
+BuildRequires:  zlib-devel
 BuildRequires:	libjpeg-devel
+
+BuildRequires:  pkgconfig(Qt5Core)
+BuildRequires:  pkgconfig(Qt5Gui)
+BuildRequires:  pkgconfig(Qt5Widgets)
+BuildRequires:  pkgconfig(cairo) >= 1.10.0
+BuildRequires:  pkgconfig(cairo-ft) >= 1.10.0
+BuildRequires:  pkgconfig(cairo-pdf)
+BuildRequires:  pkgconfig(cairo-ps)
+BuildRequires:  pkgconfig(cairo-svg)
+BuildRequires:  pkgconfig(freetype2)
+BuildRequires:  pkgconfig(libpng)
+BuildRequires:  pkgconfig(lua) >= 5.2
 
 Requires:       tex(latex)
 Requires:       xdg-utils
 
-Provides:       ipe(api) = %{version}
-Provides:       ipetoipe = %{version}
-Provides:       iperender = %{version}
-
 %description
-Ipe is a drawing editor for creating figures in PDF format.  It
-supports making small figures for inclusion into LaTeX-documents as
-well as making multi-page PDF presentations.
+A drawing editor for creating figures in PDF format.  It supports
+making small figures for inclusion into LaTeX-documents as well as
+making multi-page PDF presentations.
+
+%package devel
+Summary: Header files for writing Ipelets
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release}
+%description devel 
+The header files necessary to link against ipelib.
 
 %prep
 %setup -n %{name}-%{version} -q
@@ -36,16 +49,13 @@ well as making multi-page PDF presentations.
 find src -type f -exec chmod -x {} +
 
 %build
-## !! make sure IPELIBDIR and IPELETDIR can be overridden!
 export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
-export IPELETDIR="$(IPELIBDIR)/ipe/$(IPEVERS)/ipelets"
+export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
 
 export QT_SELECT=qt5
 export MOC=moc-qt5
 export LUA_PACKAGE=lua
-#export LUA_CFLAGS=`pkg-config --cflags lua`
-#export LUA_LIBS=`pkg-config --libs lua`
 
 pushd src
 make %{_smp_mflags}
@@ -54,7 +64,7 @@ popd
 %install
 export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
-export IPELETDIR="$(IPELIBDIR)/ipe/$(IPEVERS)/ipelets"
+export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
 pushd src
 make INSTALL_ROOT=$RPM_BUILD_ROOT install \
      INSTALL_PROGRAMS="install -m 0755"
@@ -66,7 +76,7 @@ popd
 
 %files
 %license gpl.txt
-%doc readme.txt gpl.txt news.txt
+%doc readme.txt news.txt
 
 %{_bindir}/ipe
 %{_bindir}/ipe6upgrade
@@ -83,15 +93,17 @@ popd
 
 %dir %{_libdir}/ipe
 %dir %{_libdir}/ipe/%{version}
-%dir %{_libdir}/ipe/%{version}/ipelets
+
 %{_libdir}/ipe/%{version}/ipelets
 
 %dir %{_datadir}/ipe
 %dir %{_datadir}/ipe/%{version}
+
 %{_datadir}/ipe/%{version}/icons
 %{_datadir}/ipe/%{version}/lua
 %{_datadir}/ipe/%{version}/styles
-%{_datadir}/ipe/%{version}
+%{_datadir}/ipe/%{version}/scripts
+%{_datadir}/ipe/%{version}/doc
 
 %{_mandir}/man1/ipe.1.gz
 %{_mandir}/man1/ipe6upgrade.1.gz
@@ -100,7 +112,19 @@ popd
 %{_mandir}/man1/ipescript.1.gz
 %{_mandir}/man1/ipetoipe.1.gz
 
+%files devel
 %{_includedir}/*.h
+%{_libdir}/libipe.so
+%{_libdir}/libipeui.so
+%{_libdir}/libipecairo.so
+%{_libdir}/libipecanvas.so
+%{_libdir}/libipelua.so
+
+#%if 0%{?suse_version}
+# Suse specific
+#%else
+# Other distro
+#%endif
 
 %changelog
 * Tue Jan 15 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.8-1
