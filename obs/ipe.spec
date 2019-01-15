@@ -3,9 +3,10 @@
 Name:           ipe
 Version:        7.2.8
 Release:        1
-Summary:        The Ipe extensible drawing editor
-Group:          Applications/Publishing
-License:        GNU General Public License v3.0 or later
+Summary:        Extensible drawing editor
+Group:          Productivity/Publishing/Presentation
+License:        GPL-3.0-or-later
+#License:        GNU General Public License v3.0 or later
 URL:            http://ipe.otfried.org/
 Source0:	%{name}-%{version}-src.tar.gz
 
@@ -37,14 +38,25 @@ making multi-page PDF presentations.
 
 %package devel
 Summary: Header files for writing Ipelets
-Group: Development/Libraries
+Group: Development/Libraries/C and C++
 Requires: %{name} = %{version}-%{release}
 %description devel 
 The header files necessary to link against ipelib.
 
+%if 0%{?suse_version}
+# Suse specific
+%else
+# Other distro
+%endif
+
 %prep
 %setup -n %{name}-%{version} -q
 
+sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-styles.lua
+sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-master.lua
+sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/add-style.lua
+
+# the following can go when I fix my packaging script
 # fix files permissions
 find src -type f -exec chmod -x {} +
 
@@ -119,12 +131,6 @@ popd
 %{_libdir}/libipecairo.so
 %{_libdir}/libipecanvas.so
 %{_libdir}/libipelua.so
-
-#%if 0%{?suse_version}
-# Suse specific
-#%else
-# Other distro
-#%endif
 
 %changelog
 * Tue Jan 15 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.8-1
