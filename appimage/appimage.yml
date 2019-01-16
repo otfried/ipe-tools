@@ -36,8 +36,8 @@ script:
   - install -m 0755 lib/libqhullstatic_r.a /usr/lib
   # Build Ipe
   - cd $BUILD_SOURCE_DIR
-  - tar xzf ipe-7.2.8-src.tar.gz
-  - cd ipe-7.2.8
+  - tar xzf ipe-7.2.9-src.tar.gz
+  - cd ipe-7.2.9
   - cd src
   - export LUA_CFLAGS=`pkg-config --cflags lua`
   - export LUA_LIBS=`pkg-config --libs lua`

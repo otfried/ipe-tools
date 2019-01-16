@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.8
+Version:        7.2.9
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -55,10 +55,6 @@ The header files necessary to link against ipelib.
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-styles.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-master.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/add-style.lua
-
-# the following can go when I fix my packaging script
-# fix files permissions
-find src -type f -exec chmod -x {} +
 
 %build
 export IPEPREFIX="%{_usr}"
@@ -133,5 +129,8 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Wed Jan 16 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.9-1
+- New version.
+
 * Tue Jan 15 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.8-1
 - First try to build Ipe RPMs on openSuse build service.
