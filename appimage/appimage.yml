@@ -1,6 +1,8 @@
 #
 # Building an AppImage for Ipe in openSuse Build Service (OBS)
 #
+# Unfortunately the C++ compiler in the appimage build service is stuck with C++11
+#
 
 app: ipe
 # binpatch: true
@@ -36,8 +38,8 @@ script:
   - install -m 0755 lib/libqhullstatic_r.a /usr/lib
   # Build Ipe
   - cd $BUILD_SOURCE_DIR
-  - tar xzf ipe-7.2.9-src.tar.gz
-  - cd ipe-7.2.9
+  - tar xzf ipe-7.2.10-src.tar.gz
+  - cd ipe-7.2.10
   - cd src
   - export LUA_CFLAGS=`pkg-config --cflags lua`
   - export LUA_LIBS=`pkg-config --libs lua`
@@ -71,7 +73,7 @@ script:
   - rm -f $BUILD_APPDIR/usr/lib/qt5/plugins/platformthemes/libqgtk2.so || true 
   - rmdir $BUILD_APPDIR/usr/lib/qt5/plugins/platformthemes || true # should be empty after deleting libqgtk2.so
   - rm -f $BUILD_APPDIR/usr/lib/libgio* || true # these are not needed if we don't use gtk
-  # Removed unused parts of Qt
+  # Remove unused parts of Qt
   - rm -f $BUILD_APPDIR/usr/lib/libQt5PrintSupport.so.5 || true
   - rm -f $BUILD_APPDIR/usr/lib/libQt5Network.so.5 || true
   - rm -f $BUILD_APPDIR/usr/lib/libQt5Sql.so.5 || true

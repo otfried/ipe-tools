@@ -2,7 +2,7 @@
 # Produce ipe.dsc and ipe_x.y.z-d.debian.tar.xz
 #
 
-IPEVERS="7.2.9"
+IPEVERS="7.2.10"
 DEBVERS="1"
 
 SOURCES=~/ipe-$IPEVERS-src.tar.gz

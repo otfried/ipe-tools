@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.9
+Version:        7.2.10
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -87,6 +87,7 @@ popd
 %doc readme.txt news.txt
 
 %{_bindir}/ipe
+%{_bindir}/ipepresenter
 %{_bindir}/ipe6upgrade
 %{_bindir}/ipeextract
 %{_bindir}/iperender
@@ -129,8 +130,11 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Mon Feb 04 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.10-1
+- New upstream version.
+
 * Wed Jan 16 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.9-1
-- New version.
+- New upstream version.
 
 * Tue Jan 15 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.8-1
 - First try to build Ipe RPMs on openSuse build service.
