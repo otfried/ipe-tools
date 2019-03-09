@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.10
+Version:        7.2.11
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -26,7 +26,7 @@ BuildRequires:  pkgconfig(cairo-ps)
 BuildRequires:  pkgconfig(cairo-svg)
 BuildRequires:  pkgconfig(freetype2)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(lua) >= 5.2
+BuildRequires:  pkgconfig(lua) >= 5.3
 
 Requires:       tex(latex)
 Requires:       xdg-utils
@@ -130,6 +130,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Sat Mar 09 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.11-1
+- New upstream version.
+
 * Mon Feb 04 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.10-1
 - New upstream version.
 
