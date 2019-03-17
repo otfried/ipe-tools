@@ -28,8 +28,8 @@ BuildRequires:  pkgconfig(freetype2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(lua) >= 5.3
 
-Requires:       tex(latex)
-Requires:       xdg-utils
+#Requires:       tex(latex)
+#Requires:       xdg-utils
 
 %description
 A drawing editor for creating figures in PDF format.  It supports
@@ -130,6 +130,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Sun Mar 17 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.11-2
+- Do not require tex in case user installed it differently.
+
 * Sat Mar 09 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.11-1
 - New upstream version.
 

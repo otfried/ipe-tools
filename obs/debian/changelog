@@ -1,3 +1,9 @@
+ipe (7.2.11-2) unstable; urgency=medium
+
+  * Do not insist on having tex package (it might be installed differently).
+
+ -- Otfried Cheong <otfried@ipe.airpost.net>  Sun, 17 Mar 2019 20:30:00 +0100
+
 ipe (7.2.11-1) unstable; urgency=medium
 
   * New version.
