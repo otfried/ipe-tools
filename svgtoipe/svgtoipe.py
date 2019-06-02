@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # --------------------------------------------------------------------
 # convert SVG to Ipe format
 # --------------------------------------------------------------------
 #
-# Copyright (C) 2009-2016  Otfried Cheong
+# Copyright (C) 2009-2019  Otfried Cheong
 #
 # svgtoipe is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -22,24 +22,27 @@
 #
 # --------------------------------------------------------------------
 
-svgtoipe_version = "20161209"
+svgtoipe_version = "20190602"
 
 import sys
 import argparse
+
 import xml.dom.minidom as xml
 from xml.dom.minidom import Node
 from xml.parsers.expat import ExpatError
+
 import re
 import math
-
 import base64
-import cStringIO
+import io
 
 try:
   from PIL import Image
   have_pil = True
 except:
   have_pil = False
+
+assert sys.hexversion >= 0x3000000, "Please run svgtoipe using Python 3"
 
 # --------------------------------------------------------------------
 
@@ -81,7 +84,7 @@ def printAttributes(n):
   for i in range(a.length):
     name = a.item(i).name
     if name[:9] != "sodipodi:" and name[:9] != "inkscape:":
-      print "   ", name, n.getAttribute(name)
+      sys.stderr.write("   %s %s\n" % (name, n.getAttribute(name)))
 
 def parse_float(txt):
   if not txt:
@@ -158,7 +161,7 @@ def pnext(d, n):
   return tuple(l)
 
 def parse_path(out, d):
-  d = re.findall("([A-Za-z]|-?[0-9]+\.?[0-9]*(?:e-?[0-9]*)?)", d)
+  d = re.findall("([A-Za-z]|-?(?:\.[0-9]+|[0-9]+\.?[0-9]*)(?:e-?[0-9]+)?)", d)
   x, y = 0.0, 0.0
   xs, ys = 0.0, 0.0
   x0, y0 = 0.0, 0.0
@@ -285,7 +288,7 @@ def draw_arc(out, x1, y1, rx, ry, phi, large_arc, sweep, x2, y2):
 
 # --------------------------------------------------------------------
 
-class Matrix(object):
+class Matrix():
 
   # Default is identity matrix
   def __init__(self, string = None):
@@ -607,7 +610,7 @@ class Svg():
         continue
       m = parse_transform(n)
       d = n.getAttribute("d")
-      output = cStringIO.StringIO()
+      output = io.StringIO()
       parse_path(output, d)
       path = output.getvalue()
       output.close()
@@ -717,8 +720,8 @@ class Svg():
     tokens = t.getAttribute("style").split(";")
     for token in tokens:
       if (len(token.split(":")) != 2):
-        print("Ignored style token: " + str(token))
         # Strange token
+        sys.stderr.write("Ignored style token: %s\n" % token)
         continue
       key, value = token.split(":")
       value = value.strip().lower()
@@ -834,7 +837,7 @@ class Svg():
           self.out.write('<group matrix="%s">\n' % str(m.inverse()))
     self.out.write('<image rect="%g %g %g %g"' % (x, y, x + w, y + h))
     data = base64.b64decode(href[22:])
-    fin = cStringIO.StringIO(data)
+    fin = io.StringIO(data)
     image = Image.open(fin)
     m = parse_transform(node)
     if not m:
@@ -845,7 +848,7 @@ class Svg():
                    image.size)
     self.out.write(' BitsPerComponent="8" encoding="base64"> \n')
     if True:
-      data = cStringIO.StringIO()
+      data = io.StringIO()
       for pixel in image.getdata():
         data.write("%c%c%c" % pixel[:3])
       self.out.write(base64.b64encode(data.getvalue()))
@@ -981,32 +984,31 @@ class Svg():
 def parse_arguments():
     """ parses command line arguments"""
     parser = argparse.ArgumentParser(
-            description="convert SVG into IPE files",
+            description="convert SVG into Ipe files",
             epilog="""
               Supported SVG elements:
                   path,image,rect,circle,ellipse,line,polygon,polyline
               Supported SVG attributes:
-                  group, clipPath,linearGradient,radialGradient
+                  group,clipPath,linearGradient,radialGradient
               """)
 
     parser.add_argument('-c', '--clipboard', dest='clipboard',
         action='store_true',
         help="""
-        if -c is present, svg data is written as
-        clipboard content. This allows pasting svg data from
-        inkscape to ipe: (1) Copy elements Inkscape to clipboard,
-        (2) run: 'xsel | ./svgtoipe.py -c -- | xsel -i', (3)
-        paste clipboard content into ipe.
+        if -c is present, svg data is written as clipboard content. 
+        This allows pasting svg data from inkscape to ipe: 
+        (1) Copy Inkscape elements to clipboard,
+        (2) run: 'xsel | ./svgtoipe.py -c -- | xsel -i', 
+        (3) paste clipboard content into Ipe.
         """)
 
     parser.add_argument('infile', metavar='svg-file.svg',
-            help="input file in svg format. If infile = '--' svg data is read"+\
-                 "from stdin")
+                        help="input file in svg format. If infile = '--' svg data is read from stdin.")
 
     parser.add_argument('outfile', metavar='ipe-file.ipe', nargs='?',
             help="""
                 filename to write output. If no filename is given, the input filename
-                together with '.ipe' extension is used.If outfile is '--', then data
+                together with '.ipe' extension is used. If outfile is '--', then data
                 is written to stdout.""")
 
     parser.set_defaults(
@@ -1017,7 +1019,6 @@ def parse_arguments():
 
     #try:
     args = parser.parse_args()
-    print args.infile
     if args.outfile is None:
       if args.infile != "--":
         args.outfile = args.infile[:-4] + ".ipe"

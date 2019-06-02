@@ -5,9 +5,9 @@ Svgtoipe
 This is Svgtoipe, a Python script that reads SVG figures and generates
 an XML file readable by Ipe.
 
-You'll need Python installed on your system.  To process embedded
+You'll need Python3 installed on your system.  To process embedded
 images in SVG figures will also require the Python Image Library
-(PIL).  (On Ubuntu/Debian, install python-image).
+(PIL).  (On Ubuntu/Debian, install python3-image).
 
 For installation, just copy "svgtoipe" to a suitable location on your
 system.
@@ -42,7 +42,7 @@ direct Email.
 
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2016 Otfried Cheong
+Copyright (C) 2009-2019 Otfried Cheong
 
 svgtoipe is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -63,6 +63,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 Changes
 =======
+
+ * 2019/06/02
+   Handle coordinates without a digit before the period.
+   Migrate to Python 3.
 
  * 2016/12/09
    Command line argument to generate Ipe selection format, ability to
