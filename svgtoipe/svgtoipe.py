@@ -785,7 +785,7 @@ class Svg():
     if "size" in attributes:
       self.out.write(' size="%g"' % attributes["size"])
 
-    if "color" in attributes:
+    if "color" in attributes and attributes["color"] is not None:
       self.out.write(' stroke="%g %g %g"' % attributes["color"])
 
     halign = "left"
@@ -811,7 +811,7 @@ class Svg():
       if attributes["weight"] == "bold":
         self.text = "\\bf{" + self.text + "}"
 
-    self.out.write('>%s</text>\n' % self.text.encode("UTF-8"))
+    self.out.write('>%s</text>\n' % self.text)
 
   def node_image(self, node):
     if not have_pil:
@@ -881,8 +881,15 @@ class Svg():
       self.out.write(' matrix="%s"' % m)
     self.write_pathattributes(attr)
     self.out.write('>\n')
-    x = float(n.getAttribute("x"))
-    y = float(n.getAttribute("y"))
+    if not n.hasAttribute("x"):
+        x = 0.0
+    else:
+        x = float(n.getAttribute("x"))
+
+    if not n.hasAttribute("y"):
+        y = 0.0
+    else:
+        y = float(n.getAttribute("y"))
     w = float(n.getAttribute("width"))
     h = float(n.getAttribute("height"))
     self.out.write("%g %g m %g %g l %g %g l %g %g l h\n" %
