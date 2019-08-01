@@ -20,9 +20,19 @@
 # "http://www.gnu.org/copyleft/gpl.html", or write to the Free
 # Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
+# SVG Specification: https://www.w3.org/TR/SVG11
+#
+# TODO:
+#  - coordinates used in gradients (e.g. intertwingly.svg)
+#  - sanitize paths (Ipe refuses to load illegal paths, but they are common in SVG)
+#  - handle <use> elements
+#  - store gradients in the dictionary in a more useful format
+#  - parse title and desc elements and store in Ipe header
+#  - go through SVG test suite (see test_svg.py)
+#
 # --------------------------------------------------------------------
 
-svgtoipe_version = "20190602"
+svgtoipe_version = "20190801"
 
 import sys
 import argparse
@@ -44,25 +54,32 @@ except:
 
 assert sys.hexversion >= 0x3000000, "Please run svgtoipe using Python 3"
 
+ignored_nodes = set(["defs", "audio", "video", "metadata", "sodipodi:namedview", "style", "script", "SVGTestCase",
+                     "animate", "animateTransform", "set" ])
+
 # --------------------------------------------------------------------
 
+# should extend this to cover list in https://www.w3.org/TR/SVG11/types.html#ColorKeywords
+
 color_keywords = {
+  "aqua" :"rgb(0, 255, 255)",
   "black" : "rgb(0, 0, 0)",
-  "green" :"rgb(0, 128, 0)",
-  "silver" :"rgb(192, 192, 192)",
-  "lime" :"rgb(0, 255, 0)",
+  "blue" :"rgb(0, 0, 255)",
+  "firebrick" : "rgb(178, 34, 34)",
+  "fuchsia" :"rgb(255, 0, 255)",
   "gray" :"rgb(128, 128, 128)",
-  "olive" :"rgb(128, 128, 0)",
-  "white" :"rgb(255, 255, 255)",
-  "yellow" :"rgb(255, 255, 0)",
+  "green" :"rgb(0, 128, 0)",
+  "grey" :"rgb(128, 128, 128)",  
+  "lime" :"rgb(0, 255, 0)",
   "maroon" :"rgb(128, 0, 0)",
   "navy" :"rgb(0, 0, 128)",
-  "red" :"rgb(255, 0, 0)",
-  "blue" :"rgb(0, 0, 255)",
+  "olive" :"rgb(128, 128, 0)",
   "purple" :"rgb(128, 0, 128)",
+  "red" :"rgb(255, 0, 0)",
+  "silver" :"rgb(192, 192, 192)",
   "teal" :"rgb(0, 128, 128)",
-  "fuchsia" :"rgb(255, 0, 255)",
-  "aqua" :"rgb(0, 255, 255)",
+  "white" :"rgb(255, 255, 255)",
+  "yellow" :"rgb(255, 255, 0)",
 }
 
 attribute_names = [ "stroke",
@@ -377,8 +394,8 @@ class Svg():
           self.height = h
           self.origin = (x, y)
         else:
-          self.width = parse_float(n.getAttribute("width"))
-          self.height = parse_float(n.getAttribute("height"))
+          self.width = parse_float(n.getAttribute("width")) or 500
+          self.height = parse_float(n.getAttribute("height")) or 500
           self.origin = (0, 0)
         self.root = n
         return
@@ -388,7 +405,7 @@ class Svg():
   def write_ipe_header(self):
     self.out.write('<?xml version="1.0"?>\n')
     self.out.write('<!DOCTYPE ipe SYSTEM "ipe.dtd">\n')
-    self.out.write('<ipe version="70005" creator="svgtoipe %s">\n' %
+    self.out.write('<ipe version="70212" creator="svgtoipe %s">\n' %
                    svgtoipe_version)
     self.out.write('<ipestyle>\n')
     self.out.write(('<layout paper="%d %d" frame="%d %d" ' +
@@ -400,11 +417,7 @@ class Svg():
     self.out.write('<pathstyle cap="0" join="0" fillrule="wind"/>\n')
     self.out.write('</ipestyle>\n')
     # collect definitions
-    for n in self.root.childNodes:
-      if n.nodeType != Node.ELEMENT_NODE:
-        continue
-      if hasattr(self, "def_" + n.tagName):
-        getattr(self, "def_" + n.tagName)(n)
+    self.collect_definitions(self.root)
     # write definitions into stylesheet
     if len(self.defs) > 0:
       self.out.write('<ipestyle>\n')
@@ -415,6 +428,13 @@ class Svg():
           self.write_radial_gradient(k)
       self.out.write('</ipestyle>\n')
 
+  def collect_definitions(self, node):
+    for n in node.childNodes:
+      if n.nodeType != Node.ELEMENT_NODE:
+        return
+      if hasattr(self, "def_" + n.tagName):
+        getattr(self, "def_" + n.tagName)(n)
+    
   def parse_svg(self, outname, **kwargs):
     """ parses the svg, and writes it to file.
         outname, str, output filename. if '--' then parse_svg writes to stdout.
@@ -466,6 +486,9 @@ class Svg():
     for n in root.childNodes:
       if n.nodeType != Node.ELEMENT_NODE:
         continue
+      
+      if n.tagName in ignored_nodes:
+        continue
 
       nodeName = "node_" + n.tagName.replace(":","_")
 
@@ -505,12 +528,15 @@ class Svg():
         continue
       if m.tagName != "stop":
         continue # should not happen
-      offs = m.getAttribute("offset")
+      offs = m.getAttribute("offset") or "0"
       if offs.endswith("%"):
         offs = float(offs[:-1]) / 100.0
       else:
         offs = float(offs)
-      color = parse_color(m.getAttribute("stop-color"))
+      if m.hasAttribute("stop-color"):
+        color = parse_color(m.getAttribute("stop-color"))
+      else:
+        color = [ 0, 0, 0 ]
       if m.hasAttribute("style"):
         sdict = parse_style(m.getAttribute("style"))
         if "stop-color" in sdict:
@@ -520,7 +546,12 @@ class Svg():
       if n.hasAttribute("xlink:href"):
         ref = n.getAttribute("xlink:href")
         if ref.startswith("#") and ref[1:] in self.defs:
-          stops = self.defs[ref[1:]][5]
+          gradient = self.defs[ref[1:]]
+          # TODO: use a class instead of a tuple!
+          if gradient[0] == "linearGradient":
+            stops = gradient[5]
+          else:
+            stops = gradient[6]
     return stops
 
 
@@ -618,14 +649,10 @@ class Svg():
       return
 
   def def_g(self, group):
-    for n in group.childNodes:
-      if n.nodeType != Node.ELEMENT_NODE:
-        continue
-      if hasattr(self, "def_" + n.tagName):
-        getattr(self, "def_" + n.tagName)(n)
+    self.collect_definitions(group)
 
   def def_defs(self, node):
-    self.def_g(node)
+    self.collect_definitions(node)
 
 # --------------------------------------------------------------------
 
@@ -656,8 +683,10 @@ class Svg():
         if grad in self.defs and (self.defs[grad][0] == "linearGradient" or
                                   self.defs[grad][0] == "radialGradient"):
           self.out.write(' fill="1" gradient="g%s"' % grad)
+    elif fill is None:
+      self.out.write(' fill="0"')
     else:
-      fill = parse_color(a["fill"])
+      fill = parse_color(fill)
       if fill:
         self.out.write(' fill="%g %g %g"' % fill)
     opacity = parse_opacity(a["opacity"])
@@ -701,6 +730,14 @@ class Svg():
     self.parse_nodes(group)
     self.out.write('</group>\n')
     self.attributes.pop()
+
+  def node_a(self, n):
+    url = n.getAttribute("xlink:href")
+    if url is not None:
+      self.out.write('<group url="%s">' % url)
+    self.parse_nodes(n)
+    if url is not None:
+      self.out.write('</group>\n')
 
   def collect_text(self, root):
     for n in root.childNodes:
@@ -884,14 +921,14 @@ class Svg():
     if not n.hasAttribute("x"):
         x = 0.0
     else:
-        x = float(n.getAttribute("x"))
+        x = parse_float(n.getAttribute("x"))
 
     if not n.hasAttribute("y"):
         y = 0.0
     else:
-        y = float(n.getAttribute("y"))
-    w = float(n.getAttribute("width"))
-    h = float(n.getAttribute("height"))
+        y = parse_float(n.getAttribute("y"))
+    w = parse_float(n.getAttribute("width"))
+    h = parse_float(n.getAttribute("height"))
     self.out.write("%g %g m %g %g l %g %g l %g %g l h\n" %
                    (x, y, x + w, y, x + w, y + h, x, y + h))
     self.out.write('</path>\n')
@@ -904,9 +941,13 @@ class Svg():
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
     self.out.write('>\n')
-    cx = float(n.getAttribute("cx"))
-    cy = float(n.getAttribute("cy"))
-    r = float(n.getAttribute("r"))
+    cx = 0
+    cy = 0
+    if n.hasAttribute("cx"):
+      cx = parse_float(n.getAttribute("cx"))
+    if n.hasAttribute("cy"):
+      cy = parse_float(n.getAttribute("cy"))
+    r = parse_float(n.getAttribute("r"))
     self.out.write("%g 0 0 %g %g %g e\n" % (r, r, cx, cy))
     self.out.write('</path>\n')
 

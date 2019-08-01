@@ -64,6 +64,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 Changes
 =======
 
+ * 2019/08/01
+   Handle missing attributes in various elements. More color
+   keywords. A test script to go through SVG samples.  Handle 'a'
+   elements.  Default for 'fill' is black.
+
  * 2019/06/02
    Handle coordinates without a digit before the period.
    Migrate to Python 3.
