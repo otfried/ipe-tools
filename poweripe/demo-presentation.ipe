@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70212" creator="Ipe 7.2.12">
-<info created="D:20190912133153" modified="D:20190912140952"/>
+<info created="D:20190912133153" modified="D:20190912220028"/>
 <ipestyle name="presentation">
 <symbol name="arrow/arc(spx)">
 <path stroke="sym-stroke" fill="sym-stroke" pen="sym-pen">
@@ -269,10 +269,17 @@ h
 <page>
 <layer name="alpha"/>
 <view layers="alpha" active="alpha"/>
-<text layer="alpha" pin="h" transformations="translations" pos="0 528" stroke="darkblue" type="minipage" width="736" height="21.8596" depth="7.896" valign="top" size="large" style="item">This is the first text with a bullet point.
+<path layer="alpha" stroke="darkgreen" dash="dash dotted">
+0 310.652 m
+0 414.874 l
+736 414.874 l
+736 310.652 l
+h
+</path>
+<text pin="h" transformations="translations" pos="0 528" stroke="darkblue" type="minipage" width="736" height="21.8596" depth="7.896" valign="top" size="large" style="item">This is the first text with a bullet point.
 </text>
 <text pin="h" transformations="translations" pos="0 466.244" stroke="darkred" type="minipage" width="736" height="16.6824" depth="2.688" valign="top" style="center">This is the second text which is centered and red.</text>
-<text pin="h" transformations="translations" pos="0 414.874" stroke="darkgreen" type="minipage" width="736" height="59.0296" depth="45.192" valign="top" size="huge">This is the third text which is Huge and dark green.
+<text pin="h" transformations="translations" pos="0 414.874" stroke="darkgreen" type="minipage" width="736" height="59.0296" depth="45.192" valign="top" size="huge">This is the third text which is Huge and \textcolor{lightgreen}{dark} green.
 </text>
 <path stroke="darkblue" dash="dotted">
 0 498.244 m
@@ -286,13 +293,6 @@ h
 0 466.244 l
 736 466.244 l
 736 446.874 l
-h
-</path>
-<path stroke="darkgreen" dash="dash dotted">
-0 310.652 m
-0 414.874 l
-736 414.874 l
-736 310.652 l
 h
 </path>
 <use name="mark/disk(sx)" pos="128 224" size="normal" stroke="darkblue"/>
@@ -319,5 +319,17 @@ h
 513.879 65.4535 l
 h
 </path>
+</page>
+<page>
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<text layer="alpha" pin="h" transformations="translations" pos="0 528" stroke="black" type="minipage" width="736" height="52.8248" depth="38.92" valign="top">This is the \textcolor{red}{first} line.
+ 
+\textcolor{blue}{This} is the second paragraph.
+\par
+This is the third \textcolor{purple}{paragraph.}</text>
+<text pin="h" transformations="translations" pos="0 404.255" stroke="black" type="minipage" width="736" height="50.1172" depth="36.204" valign="top" style="itemize">\item A
+\item B
+\item C</text>
 </page>
 </ipe>

@@ -9,3 +9,8 @@ Ipe.AppDir
 *.pyc
 *.snap
 test
+tmpipe*
+*.pptx
+*.exe
+*.pdf
+*.svg
