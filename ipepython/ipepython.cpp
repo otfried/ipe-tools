@@ -61,8 +61,7 @@ static int py_convert(lua_State *L, PyObject *o)
 {
   int ret = 0;
   if (o == Py_None) {
-    /* Not really needed, but this way we may check
-     * for errors with ret == 0. */
+    // Not really needed, but this way we may check for errors with ret == 0.
     lua_pushnil(L);
     ret = 1;
   } else if (o == Py_True) {
@@ -176,6 +175,8 @@ static PyObject *LuaConvert(lua_State *L, int n)
   return ret;
 }
 
+// --------------------------------------------------------------------
+
 static PyObject *LuaCall(lua_State *L, PyObject *args)
 {
   PyObject *ret = nullptr;
@@ -253,6 +254,19 @@ static PyObject *LuaCall(lua_State *L, PyObject *args)
 
 // --------------------------------------------------------------------
 
+static int LuaObject_methodCall(lua_State *L)
+{
+  int n = lua_gettop(L);                 // number of arguments to method call
+  lua_pushvalue(L, lua_upvalueindex(2)); // push method
+  lua_insert(L, 1);                      // move to bottom of stack
+  lua_pushvalue(L, lua_upvalueindex(1)); // push object containing the method
+  lua_insert(L, 2);                      // make it the first argument
+  lua_call(L, n + 1, LUA_MULTRET);
+  return lua_gettop(L);                  // return results
+}
+
+// --------------------------------------------------------------------
+
 static void LuaObject_dealloc(LuaObject *self)
 {
   luaL_unref(LuaState, LUA_REGISTRYINDEX, self->ref);
@@ -277,11 +291,17 @@ static PyObject *LuaObject_getattr(PyObject *obj, PyObject *attr)
     PyErr_SetString(PyExc_RuntimeError, "not an indexable value");
     return nullptr;
   }
-  
+
   PyObject *ret = nullptr;
   int rc = py_convert(LuaState, attr);
   if (rc) {
+    bool byName = lua_type(LuaState, -1) == LUA_TSTRING;
     lua_gettable(LuaState, -2);
+    if (byName && lua_type(LuaState, -1) == LUA_TFUNCTION && lua_isuserdata(LuaState, -2)) {
+      // We are retrieving a method of an object.
+      // Build a closure packing the method with the object itself
+      lua_pushcclosure(LuaState, LuaObject_methodCall, 2);
+    }
     ret = LuaConvert(LuaState, -1);
   } else {
     PyErr_SetString(PyExc_ValueError, "can't convert attr/key");
@@ -422,17 +442,21 @@ static PyObject *LuaObject_iternext(LuaObject *obj)
   PyObject *ret = nullptr;
   
   lua_rawgeti(LuaState, LUA_REGISTRYINDEX, ((LuaObject*)obj)->ref);
+
+  // refuse to iterate on anything except tables, as we haven't implemented it
+  if (lua_type(LuaState, -1) != LUA_TTABLE)
+    return nullptr;
   
   if (obj->refiter == 0)
     lua_pushnil(LuaState);
   else
     lua_rawgeti(LuaState, LUA_REGISTRYINDEX, obj->refiter);
-  
+
   if (lua_next(LuaState, -2) != 0) {
-    /* Remove value. */
+    // Remove value.
     lua_pop(LuaState, 1);
     ret = LuaConvert(LuaState, -1);
-    /* Save key for next iteration. */
+    // Save key for next iteration.
     if (!obj->refiter)
       obj->refiter = luaL_ref(LuaState, LUA_REGISTRYINDEX);
     else
@@ -444,6 +468,8 @@ static PyObject *LuaObject_iternext(LuaObject *obj)
   
   return ret;
 }
+
+// --------------------------------------------------------------------
 
 static int LuaObject_length(LuaObject *obj)
 {
@@ -459,8 +485,7 @@ static PyObject *LuaObject_subscript(PyObject *obj, PyObject *key)
   return LuaObject_getattr(obj, key);
 }
 
-static int LuaObject_ass_subscript(PyObject *obj,
-                   PyObject *key, PyObject *value)
+static int LuaObject_ass_subscript(PyObject *obj, PyObject *key, PyObject *value)
 {
   return LuaObject_setattr(obj, key, value);
 }
@@ -469,6 +494,102 @@ static PyMappingMethods LuaObject_as_mapping = {
   (lenfunc)LuaObject_length,    /*mp_length*/
   (binaryfunc)LuaObject_subscript,/*mp_subscript*/
   (objobjargproc)LuaObject_ass_subscript,/*mp_ass_subscript*/
+};
+
+// --------------------------------------------------------------------
+
+static int LuaObject_parith(lua_State *L)
+{
+  int op = lua_tointeger(L, -1);
+  lua_pop(L, 1); // remove op
+  lua_arith(LuaState, op);
+  return 1;
+}
+
+static PyObject *LuaObject_arith(int op, PyObject *lhs, PyObject *rhs)
+{
+  lua_pushcfunction(LuaState, LuaObject_parith);
+
+  if (!(py_convert(LuaState, lhs) && (rhs == nullptr || py_convert(LuaState, rhs)))) {
+    PyErr_SetString(PyExc_TypeError, "failed to convert argument");
+    lua_settop(LuaState, 0);
+    return nullptr;
+  }
+  
+  lua_pushinteger(LuaState, op);
+  if (lua_pcall(LuaState, rhs == nullptr ? 2 : 3, 1, 0) != LUA_OK) {
+    PyErr_SetString(PyExc_RuntimeError, lua_tostring(LuaState, -1));
+    return nullptr;
+  }
+  return LuaConvert(LuaState, -1);
+}
+
+static PyObject *LuaObject_add(PyObject *lhs, PyObject *rhs)
+{
+  return LuaObject_arith(LUA_OPADD, lhs, rhs);
+}
+
+static PyObject *LuaObject_subtract(PyObject *lhs, PyObject *rhs)
+{
+  return LuaObject_arith(LUA_OPSUB, lhs, rhs);
+}
+
+static PyObject *LuaObject_multiply(PyObject *lhs, PyObject *rhs)
+{
+  return LuaObject_arith(LUA_OPMUL, lhs, rhs);
+}
+
+static PyObject *LuaObject_power(PyObject *lhs, PyObject *rhs)
+{
+  return LuaObject_arith(LUA_OPPOW, lhs, rhs);
+}
+
+static PyObject *LuaObject_negative(PyObject *rhs)
+{
+  return LuaObject_arith(LUA_OPUNM, rhs, nullptr);
+}
+
+static PyNumberMethods LuaObject_as_number = {
+  (binaryfunc) LuaObject_add, /* nb_add */
+  (binaryfunc) LuaObject_subtract, /* nb_subtract */
+  (binaryfunc) LuaObject_multiply, /* nb_multiply */
+  nullptr, /* nb_remainder */
+  nullptr, /* nb_divmod */
+  nullptr, /* nb_power */
+  (unaryfunc) LuaObject_negative, /* nb_negative */
+  nullptr, /* nb_positive */
+  nullptr, /* nb_absolute */
+  nullptr, /* nb_bool */
+  nullptr, /* nb_invert */
+  nullptr, /* nb_lshift */
+  nullptr, /* nb_rshift */
+  nullptr, /* nb_and */
+  (binaryfunc) LuaObject_power, /* nb_xor */
+  nullptr, /* nb_or */
+  nullptr, /* nb_int */
+  nullptr, /* nb_reserved */
+  nullptr, /* nb_float */
+  
+  nullptr, /* nb_inplace_add */
+  nullptr, /* nb_inplace_subtract */
+  nullptr, /* nb_inplace_multiply */
+  nullptr, /* nb_inplace_remainder */
+  nullptr, /* nb_inplace_power */
+  nullptr, /* nb_inplace_lshift */
+  nullptr, /* nb_inplace_rshift */
+  nullptr, /* nb_inplace_and */
+  nullptr, /* nb_inplace_xor */
+  nullptr, /* nb_inplace_or */
+  
+  nullptr, /* nb_floor_divide */
+  nullptr, /* nb_true_divide */
+  nullptr, /* nb_inplace_floor_divide */
+  nullptr, /* nb_inplace_true_divide */
+  
+  nullptr, /* nb_index */
+  
+  nullptr, /* nb_matrix_multiply */
+  nullptr, /* nb_inplace_matrix_multiply */
 };
 
 // --------------------------------------------------------------------
@@ -484,13 +605,13 @@ PyTypeObject LuaObject_Type = {
   0,                        /*tp_setattr*/
   0,                        /*tp_compare*/
   LuaObject_str,            /*tp_repr*/
-  0,                        /*tp_as_number*/
+  &LuaObject_as_number,     /*tp_as_number*/
   0,                        /*tp_as_sequence*/
   &LuaObject_as_mapping,    /*tp_as_mapping*/
   0,                        /*tp_hash*/
-  (ternaryfunc)LuaObject_call,     /*tp_call*/
+  (ternaryfunc)LuaObject_call, /*tp_call*/
   LuaObject_str,            /*tp_str*/
-  LuaObject_getattr,       /*tp_getattro*/
+  LuaObject_getattr,        /*tp_getattro*/
   LuaObject_setattr,        /*tp_setattro*/
   0,                        /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/

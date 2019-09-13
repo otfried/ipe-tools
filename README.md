@@ -13,6 +13,23 @@ all SVG features (many SVG features are not supported by Ipe anyway),
 but it works for gradients.
 
 
+ipepython
+---------
+
+A Python 3 extension module that will let you open and work with Ipe
+documents from Python.
+
+
+Poweripe
+--------
+
+Do you prefer to create your presentations in Ipe?  But your
+bosses/colleagues/clients keep asking for Powerpoint files?
+
+Fear no more!  Poweripe is a Python script that translates an Ipe
+presentation into a Powerpoint presentation.
+
+
 Matplotlib backend
 ------------------
 

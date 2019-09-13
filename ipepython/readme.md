@@ -35,12 +35,6 @@ doc = ipe.Document("filename.pdf")
 
 Have a look at `test.py` for an example.
 
-**Methods:** In Lua, methods of an object are called using the
-"colon-syntax". For instance, you write `obj:get("stroke")` to obtain
-the stroke color of an Ipe object.  In Python, you will have to
-provide the object **again** as the first argument of the method, like
-this: `obj.get(obj, "stroke")`.  (Lua doesn't automatically fill in
-the `self` argument.)
 
 **Tables:** Many functions return Lua tables.  For instance,
 ```
@@ -48,8 +42,8 @@ props = doc.properties(doc)
 ```
 will set `props` to be a table with keys such as `author`,
 `title`, `created`, etc.   You can access the elements of a table
-using attribute syntax `props.title`, using dictionary syntax
-`props['title']`, and you can iterate over its keys in a for loop:
+using attribute syntax: `props.title`, using dictionary syntax:
+`props['title']`, and you can iterate over its keys in a `for` loop:
 ```
 for k in props:
   print(k, props[k])
@@ -64,3 +58,6 @@ for pageNo in range(1, len(doc) + 1):
   print("Page %d has %d objects" % (pageNo, len(doc[pageNo])))
 ```
 
+**Iterators:** The Lua iterations using `page:objects()` and
+`document:pages()` do not work from Python.  Use a loop over the
+indices instead.

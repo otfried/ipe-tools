@@ -60,11 +60,11 @@ class PowerIpe:
     self.args = args
 
   def findColors(self):
-    s = self.sheets.allNames(self.sheets, "color")
+    s = self.sheets.allNames("color")
     self.colors = {}
     for k in s:
       sym = s[k]
-      abs = self.sheets.find(self.sheets, "color", sym)
+      abs = self.sheets.find("color", sym)
       h = "%02x%02x%02x" % (int(abs.r * 255), int(abs.g * 255), int(abs.b * 255))
       rgb = pptx.dml.color.RGBColor.from_string(h)
       self.colors[sym] = rgb
@@ -79,26 +79,26 @@ class PowerIpe:
 
   def addSvg(self, slide, pageNo, svgobjs):
     doc1 = ipe.Document()
-    doc1.replaceSheets(doc1, self.sheets.clone(self.sheets))
-    doc1.setProperties(doc1, self.iprops)
+    doc1.replaceSheets(self.sheets.clone())
+    doc1.setProperties(self.iprops)
     p1 = doc1[1]
     p = self.doc[pageNo]
     for i in svgobjs:
       obj = p[i]
-      p1.insert(p1, None, obj.clone(obj), None, "alpha")
+      p1.insert(None, obj.clone(), None, "alpha")
     tmpname = "tmpipe%d.ipe" % pageNo
     svgname = "tmpipe%d.svg" % pageNo
     pngname = "tmpipe%d.png" % pageNo
-    doc1.save(doc1, tmpname, "xml", None)
+    doc1.save(tmpname, "xml", None)
     os.system("iperender -svg -nocrop %s %s" % (tmpname, svgname))
     os.system("iperender -png -nocrop -transparent %s %s" % (tmpname, pngname))
     pic = slide.shapes.add_svg_picture(svgname, pngname, 0, 0)
 
   def convertText(self, slide, obj):
-    s = obj.text(obj).strip()
-    textStyle = obj.get(obj, "textstyle")
-    textSize = obj.get(obj, "textsize")
-    color = obj.get(obj, "stroke")
+    s = obj.text().strip()
+    textStyle = obj.get("textstyle")
+    textSize = obj.get("textsize")
+    color = obj.get("stroke")
     italic = False
     bold = False
     if s.startswith(r"\bfseries"):
@@ -117,13 +117,13 @@ class PowerIpe:
     if len(pars) == 0:
       return # huh?
     box = ipe.Rect()
-    obj.addToBBox(obj, box, ipe.Matrix())
-    pos = box.topLeft(box)
+    obj.addToBBox(box, ipe.Matrix())
+    pos = box.topLeft()
     size = sizeMap.get(textSize, sizeMap["normal"])
     #helper = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Pt(self.x0 + pos.x), Pt(self.y0 - pos.y),
-    # Pt(box.width(box)), Pt(box.height(box)))
+    # Pt(box.width()), Pt(box.height()))
     txBox = slide.shapes.add_textbox(Pt(self.x0 + pos.x), Pt(self.y0 - pos.y - 0.2 * size),
-                                     Pt(box.width(box)), Pt(box.height(box)))
+                                     Pt(box.width()), Pt(box.height()))
     tf = txBox.text_frame
     tf.word_wrap = True
     tf.auto_size = MSO_AUTO_SIZE.NONE
@@ -175,14 +175,13 @@ class PowerIpe:
   def wantConvertText(self, obj):
     if self.args.no_text:
       return False
-    mp = obj.get(obj, "minipage")
+    mp = obj.get("minipage")
     if not mp:
       return False
-    s = obj.text(obj)
     if self.args.latex:
       return True
     # allow some simple latex
-    s = s.strip()
+    s = obj.text().strip()
     if s.startswith("\\itshape"):
       s = s[8:]
     if s.startswith("\\bfseries"):
@@ -194,25 +193,25 @@ class PowerIpe:
     return not ("\\" in s or "$" in s)
 
   def embedImage(self, slide, obj):
-    info = obj.info(obj)
+    info = obj.info()
     s = str(obj) # make a unique name
     imgname = "tmpipe" + s[s.index("@"):]
     ext = ".jpg" if info.format == "jpg" else ".ppm"
-    obj.savePixels(obj, imgname + ext)
+    obj.savePixels(imgname + ext)
     if ext == ".ppm":
       im = Image.open(imgname + ext)
       ext = ".png"
       im.save(imgname + ext)
     box = ipe.Rect()
-    obj.addToBBox(obj, box, ipe.Matrix())
-    pos = box.topLeft(box)
+    obj.addToBBox(box, ipe.Matrix())
+    pos = box.topLeft()
     pic = slide.shapes.add_picture(imgname + ext, Pt(self.x0 + pos.x), Pt(self.y0 - pos.y),
-                                   Pt(box.width(box)), Pt(box.height(box)))
+                                   Pt(box.width()), Pt(box.height()))
     
   def convertPage(self, pageNo, viewNo):
     sys.stderr.write("Converting page %d\n" % pageNo)
     p = self.doc[pageNo]
-    t = p.titles(p)
+    t = p.titles()
     if t.title != "":
       slide = self.prs.slides.add_slide(self.title_slide_layout)
       title_placeholder = slide.shapes.title
@@ -222,10 +221,10 @@ class PowerIpe:
     # First determine which objects we'll convert to svg
     svgobjs = set()
     for i in range(1, len(p) + 1):
-      if not p.visible(p, viewNo, i):
+      if not p.visible(viewNo, i):
         continue
       obj = p[i]
-      ty = obj.type(obj)
+      ty = obj.type()
       if ty == "text" and self.wantConvertText(obj):
         pass
       elif ty == "image":
@@ -235,17 +234,17 @@ class PowerIpe:
     self.addSvg(slide, pageNo, svgobjs)
     # Now add remaining objects
     for i in range(1, len(p) + 1):
-      if i in svgobjs or not p.visible(p, viewNo, i):
+      if i in svgobjs or not p.visible(viewNo, i):
         continue
       obj = p[i]
-      ty = obj.type(obj)
+      ty = obj.type()
       if ty == "text":
         self.convertText(slide, obj)
 
   def convert(self):
     self.doc = ipe.Document(self.args.ipefile)
-    self.sheets = self.doc.sheets(self.doc)
-    self.iprops = self.doc.properties(self.doc)
+    self.sheets = self.doc.sheets()
+    self.iprops = self.doc.properties()
     self.findColors()
 
     self.prs = pptx.Presentation()
@@ -261,7 +260,7 @@ class PowerIpe:
     props.keywords = self.iprops.keywords
     props.subject = self.iprops.subject
     
-    layout = self.sheets.find(self.sheets, "layout")
+    layout = self.sheets.find("layout")
     self.x0 = layout.origin.x
     self.y0 = layout.origin.y + layout.papersize.y
   
@@ -270,7 +269,7 @@ class PowerIpe:
   
     for pageNo in range(1, len(self.doc) + 1):
       p = self.doc[pageNo]
-      viewNo = p.countViews(p)
+      viewNo = p.countViews()
       self.convertPage(pageNo, viewNo)
 
     pptname = self.args.output
