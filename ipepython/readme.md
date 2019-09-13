@@ -3,10 +3,11 @@
 This is an extension module that will let you read and write Ipe
 documents from Python 3.
 
-It makes use of the Ipe Lua-bindings, using Python-Lua bridge based on
-code written by [Gustavo Niemeyer](http://labix.org/lunatic-python).
+It makes the Ipe Lua-bindings available using a Python-Lua bridge
+based on code written by [Gustavo
+Niemeyer](http://labix.org/lunatic-python).
 
-## Compiling
+## Installation
 
 You'll need to fill in the arguments to find the Lua and Ipe header
 files and library in `setup.py`.  Then say
@@ -15,10 +16,7 @@ python3 setup.py build
 sudo python3 setup.py install
 ```
 
-## Using
-
-The `ipe` module makes available Ipe's [Lua
-bindings](http://ipe.otfried.org/manual/lua.html) in Python.
+## Documentation
 
 After loading the module:
 
@@ -47,9 +45,12 @@ props = doc.properties(doc)
 ```
 
 will set `props` to be a table with keys such as `author`, `title`,
-`created`, etc.  You can access the elements of a table using
-attribute syntax: `props.title`, using dictionary syntax:
-`props['title']`, and you can iterate over its keys in a `for` loop:
+`created`, etc.  
+
+You can access the elements of a table using either
+attribute syntax (`props.title`) or dictionary syntax
+(`props['title']`).  You can also can iterate over the elements of a
+table in a `for` loop:
 
 ```
 for k in props:
