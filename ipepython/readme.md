@@ -3,8 +3,8 @@
 This is an extension module that will let you read and write Ipe
 documents from Python 3.
 
-It makes use of the Ipe Lua-bindings, through a [Python-Lua
-bridge](http://labix.org/lunatic-python) written by Gustavo Niemeyer.
+It makes use of the Ipe Lua-bindings, using Python-Lua bridge based on
+code written by [Gustavo Niemeyer](http://labix.org/lunatic-python).
 
 ## Compiling
 
@@ -18,17 +18,18 @@ sudo python3 setup.py install
 ## Using
 
 The `ipe` module makes available Ipe's [Lua
-bindings](http://ipe.otfried.org/manual/lua.html) in Python, so you
-can now write scripts working with Ipe files in Python.
+bindings](http://ipe.otfried.org/manual/lua.html) in Python.
 
-Load the module like so:
+After loading the module:
+
 ```
-import ipe as Ipe
-ipe = Ipe.ipe()
+import ipe
 ```
 
-You can now use the members of the `ipe` table just like in Lua. For
-instance, load an Ipe document by saying:
+you can use the functions documented in the [Lua
+bindings](http://ipe.otfried.org/manual/lua.html). For instance, load
+an Ipe document by saying:
+
 ```
 doc = ipe.Document("filename.pdf")
 ```
@@ -36,14 +37,20 @@ doc = ipe.Document("filename.pdf")
 Have a look at `test.py` for an example.
 
 
-**Tables:** Many functions return Lua tables.  For instance,
+**Tables:** Several methods in the module return *Lua tables*.  These
+are similar to Python dictionaries, but are a distinct type.
+
+For instance,
+
 ```
 props = doc.properties(doc)
 ```
-will set `props` to be a table with keys such as `author`,
-`title`, `created`, etc.   You can access the elements of a table
-using attribute syntax: `props.title`, using dictionary syntax:
+
+will set `props` to be a table with keys such as `author`, `title`,
+`created`, etc.  You can access the elements of a table using
+attribute syntax: `props.title`, using dictionary syntax:
 `props['title']`, and you can iterate over its keys in a `for` loop:
+
 ```
 for k in props:
   print(k, props[k])
@@ -53,11 +60,12 @@ for k in props:
 of graphical objects.  In Lua, indices **start with one**, not zero!
 You can use Python's `len` function to determine the length of a
 sequence.  For instance, loop over the pages of a document like this:
+
 ```
 for pageNo in range(1, len(doc) + 1):
   print("Page %d has %d objects" % (pageNo, len(doc[pageNo])))
 ```
 
-**Iterators:** The Lua iterations using `page:objects()` and
-`document:pages()` do not work from Python.  Use a loop over the
-indices instead.
+**Iterators:** The Lua documentation shows loops using
+`page:objects()` and `document:pages()`.  This does not work from
+Python.  You should use a loop over the indices instead.

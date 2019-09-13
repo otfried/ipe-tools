@@ -15,6 +15,9 @@
 
 #include "ipebase.h"
 
+// for testing direct execution of Lua code, not used for Ipe bindings
+#define IPELUA_EVAL 0
+
 // --------------------------------------------------------------------
 
 // in ipelua
@@ -163,8 +166,8 @@ static PyObject *LuaConvert(lua_State *L, int n)
       ret = obj->o;
       break;
     }
-    
-    /* Otherwise go on and handle as custom. */
+
+    // Otherwise go on and handle as custom.
   }
     
   default:
@@ -338,8 +341,7 @@ static int LuaObject_setattr(PyObject *obj, PyObject *attr, PyObject *value)
       lua_settable(LuaState, -3);
       ret = 0;
     } else {
-      PyErr_SetString(PyExc_ValueError,
-		      "can't convert value");
+      PyErr_SetString(PyExc_ValueError, "can't convert value");
     }
   } else {
     PyErr_SetString(PyExc_ValueError, "can't convert key/attr");
@@ -403,7 +405,7 @@ static int LuaObject_pcmp(lua_State *L)
     lua_pushboolean(L, !lua_compare(L, -2, -1, LUA_OPEQ));
     break;
   case Py_GT:
-    lua_insert(LuaState, -2);
+    lua_insert(LuaState, -2);  // flip order of arguments
   case Py_LT:
     lua_pushboolean(L, lua_compare(L, -2, -1, LUA_OPLT));
     break;
@@ -491,9 +493,9 @@ static int LuaObject_ass_subscript(PyObject *obj, PyObject *key, PyObject *value
 }
 
 static PyMappingMethods LuaObject_as_mapping = {
-  (lenfunc)LuaObject_length,    /*mp_length*/
-  (binaryfunc)LuaObject_subscript,/*mp_subscript*/
-  (objobjargproc)LuaObject_ass_subscript,/*mp_ass_subscript*/
+  (lenfunc)LuaObject_length,              /* mp_length */
+  (binaryfunc)LuaObject_subscript,        /* mp_subscript */
+  (objobjargproc)LuaObject_ass_subscript, /* mp_ass_subscript */
 };
 
 // --------------------------------------------------------------------
@@ -639,6 +641,7 @@ PyTypeObject LuaObject_Type = {
 
 // --------------------------------------------------------------------
 
+#if IPELUA_EVAL
 static PyObject *Lua_run(PyObject *args, int eval)
 {
   char *s;
@@ -689,10 +692,10 @@ static PyObject *Lua_eval(PyObject *self, PyObject *args)
   return Lua_run(args, 1);
 }
 
-static PyObject *Lua_global(const char *name)
+static PyObject *Lua_globals(PyObject *self, PyObject *args)
 {
   PyObject *ret = nullptr;
-  lua_getglobal(LuaState, name);
+  lua_getglobal(LuaState, "_G");
   if (lua_isnil(LuaState, -1)) {
     PyErr_SetString(PyExc_RuntimeError, "lost globals reference");
     lua_pop(LuaState, 1);
@@ -700,30 +703,21 @@ static PyObject *Lua_global(const char *name)
   }
   ret = LuaConvert(LuaState, -1);
   if (!ret)
-    PyErr_Format(PyExc_TypeError,
-		 "failed to convert globals table");
+    PyErr_Format(PyExc_TypeError, "failed to convert table");
   lua_settop(LuaState, 0);
   return ret;
 }
-
-static PyObject *Lua_globals(PyObject *self, PyObject *args)
-{
-  return Lua_global("_G");
-}
-
-static PyObject *Lua_ipe(PyObject *self, PyObject *args)
-{
-  return Lua_global("ipe");
-}
+#endif
 
 // --------------------------------------------------------------------
 
 static PyMethodDef ipe_methods[] =
 {
+#if IPELUA_EVAL
   {"execute",    Lua_execute,    METH_VARARGS, nullptr},
   {"eval",       Lua_eval,       METH_VARARGS, nullptr},
   {"globals",    Lua_globals,    METH_NOARGS,  nullptr},
-  {"ipe",        Lua_ipe,        METH_NOARGS,  nullptr},
+#endif
   {nullptr,      nullptr}
 };
 
@@ -742,20 +736,38 @@ static void push_string(lua_State *L, ipe::String str)
   lua_pushlstring(L, str.data(), str.size());
 }
 
-static void setup_globals(lua_State *L)
+static void setup_config(lua_State *L)
 {
+  lua_getglobal(L, "ipe");
+  
   lua_newtable(L);  // config table
 
   push_string(L, ipe::Platform::latexDirectory());
   lua_setfield(L, -2, "latexdir");
 
-  lua_pushfstring(L, "Ipe %d.%d.%d", 
-		  ipe::IPELIB_VERSION / 10000,
-		  (ipe::IPELIB_VERSION / 100) % 100,
-		  ipe::IPELIB_VERSION % 100);
+  lua_pushinteger(L, ipe::IPELIB_VERSION);
   lua_setfield(L, -2, "version");
 
-  lua_setglobal(L, "config");
+  lua_setfield(L, -2, "config");  // set as ipe.config
+}
+
+static bool populate_module(PyObject *m, lua_State *L)
+{
+  // ipe table is at the top of the stack
+  lua_pushnil(L);
+  while (lua_next(L, -2) != 0) {
+    PyObject *obj = LuaConvert(L, -1);
+    lua_pop(L, 1);
+    if (obj == nullptr || lua_type(L, -1) != LUA_TSTRING) 
+      return false;
+    Py_INCREF(obj);
+    if (PyModule_AddObject(m, lua_tostring(L, -1), obj) < 0) {
+      Py_DECREF(m);
+      Py_DECREF(obj);
+      return false;
+    }
+  }
+  return true;
 }
 
 // --------------------------------------------------------------------
@@ -771,8 +783,10 @@ PyMODINIT_FUNC PyInit_ipe(void)
     LuaState = luaL_newstate();
     luaL_openlibs(LuaState);
     luaopen_ipe(LuaState);
-    setup_globals(LuaState);
+    setup_config(LuaState);
+    bool ok = populate_module(m, LuaState);
     lua_settop(LuaState, 0);
+    if (!ok) return nullptr;
   }
   return m;
 }

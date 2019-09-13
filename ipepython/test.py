@@ -7,15 +7,9 @@ import math
 
 assert sys.hexversion >= 0x3060000
 
-import ipe as Ipe
-ipe = Ipe.ipe()
+import ipe
 
-print("Some quick tests of the Lua bridge:")
-print("1 + 1 in Lua: ", Ipe.eval("1 + 1"))
-Ipe.execute("print('Hello World' .. ' from Lua')")
-g = Ipe.globals()
-print("sqrt(2) from Lua: ", g.math.sqrt(2))
-print("Global variable config: ", g.config.latexdir, g.config.platform)
+print("Ipe configuration: ", ipe.config.latexdir, ipe.config.version)
 
 print("Testing ipe.Vector and ipe.Matrix:")
 v1 = ipe.Vector()

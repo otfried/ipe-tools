@@ -17,8 +17,7 @@ from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE, MSO_ANCHOR
 from PIL import Image
 from lxml import etree
 
-import ipe as Ipe
-ipe = Ipe.ipe()
+import ipe
 
 assert sys.hexversion >= 0x3060000
 
