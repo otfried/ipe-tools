@@ -175,7 +175,7 @@ class PowerIpe:
     if self.args.no_text:
       return False
     mp = obj.get("minipage")
-    if not mp:
+    if not self.args.labels and not mp:
       return False
     if self.args.latex:
       return True
@@ -284,6 +284,7 @@ if __name__ == "__main__":
   parser.add_argument('--output', help="File name for pptx output")
   parser.add_argument('--no-text', help="Do not convert text objects", action='store_true')
   parser.add_argument('--latex', help="Try to convert Latex text", action='store_true')
+  parser.add_argument('--labels', help="Also convert label objects, not just minipages", action='store_true')
 
   powerIpe = PowerIpe(parser.parse_args())
   powerIpe.convert()

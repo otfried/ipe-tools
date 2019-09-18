@@ -58,6 +58,9 @@ can be edited in the pptx file.
 With the `--latex` option, Poweripe will convert all minipage text
 objects.  You will have to edit the resulting pptx file to make it useful.
 
+With the `--labels` option, Poweripe will also convert text in Label
+objects (not just minipage objects).
+
 Since the `python-pptx` library does not yet support making slides
 that build up incrementally, Poweripe currently converts only the
 **last view** of each page.
