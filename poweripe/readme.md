@@ -51,13 +51,12 @@ Powerpoint versions will display the SVG contents, but it seems that
 Libreoffice does not yet support SVG and shows the bitmap version
 instead.
 
-If you remove `--no-text` option, Poweripe will convert all minipage
-text objects contain only simple Latex markup into text objects that
+If you remove the `--no-text` option, Poweripe will convert all minipage
+text objects that contain only simple Latex markup into text objects that
 can be edited in the pptx file.
 
-With the `--latex` option, Poweripe will also convert minipage text
-objects that contain Latex markup.  You will have to edit the
-resulting pptx file to make it useful.
+With the `--latex` option, Poweripe will convert all minipage text
+objects.  You will have to edit the resulting pptx file to make it useful.
 
 Since the `python-pptx` library does not yet support making slides
 that build up incrementally, Poweripe currently converts only the
