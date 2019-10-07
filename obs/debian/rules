@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 export IPEPREFIX=/usr
+export IPECURL=1
 export INSTALL_ROOT=$(shell pwd)/debian/tmp
 
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all

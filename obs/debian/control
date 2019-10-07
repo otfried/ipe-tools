@@ -11,7 +11,8 @@ Build-Depends: sharutils,
                libcairo2-dev,
                libjpeg-dev,
                libpng-dev,
-               liblua5.3-dev
+               liblua5.3-dev,
+	       libcurl4-openssl-dev
 Homepage: http://ipe.otfried.org/
 
 Package: ipe

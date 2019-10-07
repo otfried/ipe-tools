@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.12
+Version:        7.2.13
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -27,6 +27,7 @@ BuildRequires:  pkgconfig(cairo-svg)
 BuildRequires:  pkgconfig(freetype2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(lua) >= 5.3
+BuildRequires:  pkgconfig(libcurl)
 
 #Requires:       tex(latex)
 #Requires:       xdg-utils
@@ -60,6 +61,7 @@ sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/add-style.lua
 export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
 export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
+export IPECURL=1
 
 export QT_SELECT=qt5
 export MOC=moc-qt5
@@ -73,6 +75,7 @@ popd
 export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
 export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
+export IPECURL=1
 pushd src
 make INSTALL_ROOT=$RPM_BUILD_ROOT install \
      INSTALL_PROGRAMS="install -m 0755"
@@ -93,6 +96,7 @@ popd
 %{_bindir}/iperender
 %{_bindir}/ipescript
 %{_bindir}/ipetoipe
+%{_bindir}/ipecurl
 
 %{_libdir}/libipe.so.%{version}
 %{_libdir}/libipeui.so.%{version}
@@ -130,6 +134,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Mon Oct 07 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.13-1
+- New upstream version.
+
 * Mon May 06 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.12-1
 - New upstream version.
 
