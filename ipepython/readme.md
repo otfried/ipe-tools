@@ -41,7 +41,7 @@ are similar to Python dictionaries, but are a distinct type.
 For instance,
 
 ```
-props = doc.properties(doc)
+props = doc.properties()
 ```
 
 will set `props` to be a table with keys such as `author`, `title`,
