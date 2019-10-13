@@ -9,7 +9,7 @@ ipe_libdir = '../../ipe/build/lib'
 
 ipe_includes = [ '-I%s/include' % ipe_srcdir ]
 ipe_libs = [ '-L%s' % ipe_libdir, '-lipelua', '-lipe' ]
-                
+
 ipemodule = Extension('ipe',
                       sources = ['ipepython.cpp'],
                       extra_compile_args = lua_includes + ipe_includes,
@@ -21,7 +21,7 @@ setup(name = 'ipe',
       description = 'Use Ipelib from Python',
       url = 'https://github.com/otfried/ipe-tools/tree/python3/ipepython',
       author = 'Otfried Cheong',
-      author_email = 'otfried@ipe.airpost.net',
+      author_email = 'otfried@ipe.otfried.org',
       license = 'GPL3',
       ext_modules = [ipemodule],
 )

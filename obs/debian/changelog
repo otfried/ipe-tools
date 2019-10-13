@@ -8,34 +8,34 @@ ipe (7.2.12-1) unstable; urgency=medium
 
   * New version.
 
- -- Otfried Cheong <otfried@ipe.airpost.net>  Mon, 06 May 2019 10:40:00 +0100
+ -- Otfried Cheong <otfried@ipe.otfried.org>  Mon, 06 May 2019 10:40:00 +0100
 
 ipe (7.2.11-2) unstable; urgency=medium
 
   * Do not insist on having tex package (it might be installed differently).
 
- -- Otfried Cheong <otfried@ipe.airpost.net>  Sun, 17 Mar 2019 20:30:00 +0100
+ -- Otfried Cheong <otfried@ipe.otfried.org>  Sun, 17 Mar 2019 20:30:00 +0100
 
 ipe (7.2.11-1) unstable; urgency=medium
 
   * New version.
 
- -- Otfried Cheong <otfried@ipe.airpost.net>  Sat, 09 Mar 2019 13:40:00 +0100
+ -- Otfried Cheong <otfried@ipe.otfried.org>  Sat, 09 Mar 2019 13:40:00 +0100
 
 ipe (7.2.10-1) unstable; urgency=medium
 
   * New version.
 
- -- Otfried Cheong <otfried@ipe.airpost.net>  Mon, 04 Feb 2019 14:03:00 +0100
+ -- Otfried Cheong <otfried@ipe.otfried.org>  Mon, 04 Feb 2019 14:03:00 +0100
 
 ipe (7.2.9-1) unstable; urgency=medium
 
   * New version.
 
- -- Otfried Cheong <otfried@ipe.airpost.net>  Wed, 16 Jan 2019 14:20:00 +0100
+ -- Otfried Cheong <otfried@ipe.otfried.org>  Wed, 16 Jan 2019 14:20:00 +0100
 
 ipe (7.2.8-1) unstable; urgency=medium
 
   * First build on opensuse build service
 
- -- Otfried Cheong <otfried@ipe.airpost.net>  Thu, 10 Jan 2019 16:25:00 +0100
+ -- Otfried Cheong <otfried@ipe.otfried.org>  Thu, 10 Jan 2019 16:25:00 +0100
