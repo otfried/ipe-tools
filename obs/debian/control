@@ -1,5 +1,5 @@
 Source: ipe
-Maintainer: Otfried Cheong <otfried@ipe.otfried.org>
+Maintainer: Otfried Cheong <ipe@otfried.org>
 Section: graphics
 Priority: optional
 Build-Depends: sharutils,

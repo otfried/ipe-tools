@@ -25,7 +25,7 @@ echo "Version: $IPEVERS-$DEBVERS" >> $DSCFILE
 
 cat <<EOF >> $DSCFILE
 Binary: ipe
-Maintainer: Otfried Cheong <otfried@ipe.otfried.org>
+Maintainer: Otfried Cheong <ipe@otfried.org>
 Architecture: any
 Homepage: http://ipe.otfried.org/
 Build-Depends: sharutils, debhelper (>= 9~), zlib1g-dev, qtbase5-dev, qtbase5-dev-tools, libfreetype6-dev, libcairo2-dev, libjpeg-dev, libpng-dev, liblua5.3-dev, libcurl4-openssl-dev

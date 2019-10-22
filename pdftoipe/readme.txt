@@ -31,7 +31,7 @@ direct Email.
 	Dept. of Computer Science
 	KAIST
 	Daejeon, South Korea
-	Email: otfried@ipe.otfried.org
+	Email: ipe@otfried.org
 	Ipe webpage: http://ipe.otfried.org
 
 --------------------------------------------------------------------

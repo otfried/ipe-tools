@@ -27,7 +27,7 @@ also send suggestions or comments directly to us by Email, but you
 should then not expect a reply.
 
         Alexander Bürger, acfb@users.sourceforge.net
-	Otfried Cheong, otfried@ipe.airpost.net
+	Otfried Cheong, ipe@otfried.org
 
 	Ipe webpage: http://ipe.otfried.org
 
@@ -40,4 +40,3 @@ either version 2 of the License, or (at your option) any later
 version.
 
 See the file gpl.txt for details.
-

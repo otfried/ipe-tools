@@ -21,7 +21,7 @@ setup(name = 'ipe',
       description = 'Use Ipelib from Python',
       url = 'https://github.com/otfried/ipe-tools/tree/python3/ipepython',
       author = 'Otfried Cheong',
-      author_email = 'otfried@ipe.otfried.org',
+      author_email = 'ipe@otfried.org',
       license = 'GPL3',
       ext_modules = [ipemodule],
 )

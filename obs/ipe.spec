@@ -134,23 +134,23 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
-* Mon Oct 07 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.13-1
+* Mon Oct 07 2019 Otfried Cheong <ipe@otfried.org> - 7.2.13-1
 - New upstream version.
 
-* Mon May 06 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.12-1
+* Mon May 06 2019 Otfried Cheong <ipe@otfried.org> - 7.2.12-1
 - New upstream version.
 
-* Sun Mar 17 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.11-2
+* Sun Mar 17 2019 Otfried Cheong <ipe@otfried.org> - 7.2.11-2
 - Do not require tex in case user installed it differently.
 
-* Sat Mar 09 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.11-1
+* Sat Mar 09 2019 Otfried Cheong <ipe@otfried.org> - 7.2.11-1
 - New upstream version.
 
-* Mon Feb 04 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.10-1
+* Mon Feb 04 2019 Otfried Cheong <ipe@otfried.org> - 7.2.10-1
 - New upstream version.
 
-* Wed Jan 16 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.9-1
+* Wed Jan 16 2019 Otfried Cheong <ipe@otfried.org> - 7.2.9-1
 - New upstream version.
 
-* Tue Jan 15 2019 Otfried Cheong <otfried@ipe.otfried.org> - 7.2.8-1
+* Tue Jan 15 2019 Otfried Cheong <ipe@otfried.org> - 7.2.8-1
 - First try to build Ipe RPMs on openSuse build service.

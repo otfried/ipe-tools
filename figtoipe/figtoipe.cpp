@@ -1,7 +1,7 @@
 /*
 
     This file is part of the extensible drawing editor Ipe.
-    Copyright (C) 1993-2008 Otfried Cheong <otfried@ipe.airpost.net>
+    Copyright (C) 1993-2019 Otfried Cheong <ipe@otfried.org>
 
     Ipe is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -1270,7 +1270,7 @@ void FigWriter::WriteArc(const FigObject &obj)
 static void print_help_message()
 {
   fprintf(stderr, "figtoipe is part of the extensible drawing editor Ipe.\n"
-	  "  Copyright (C) 1993-2008 Otfried Cheong <otfried@ipe.airpost.net>\n"
+	  "  Copyright (C) 1993-2019 Otfried Cheong <ipe@otfried.org>\n"
 	  "  This is free software with ABSOLUTELY NO WARRANTY.\n"
 	  "\n"
 	  "Use: figtoipe [-g] [-c] [-p preamble] <figfile> <xmlfile>\n"
