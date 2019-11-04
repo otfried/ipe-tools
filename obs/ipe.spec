@@ -62,6 +62,7 @@ export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
 export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
 export IPECURL=1
+export IPE_NO_IPELIB_VERSION_CHECK=1
 
 export QT_SELECT=qt5
 export MOC=moc-qt5
