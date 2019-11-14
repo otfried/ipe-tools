@@ -69,7 +69,7 @@ color_keywords = {
   "fuchsia" :"rgb(255, 0, 255)",
   "gray" :"rgb(128, 128, 128)",
   "green" :"rgb(0, 128, 0)",
-  "grey" :"rgb(128, 128, 128)",  
+  "grey" :"rgb(128, 128, 128)",
   "lime" :"rgb(0, 255, 0)",
   "maroon" :"rgb(128, 0, 0)",
   "navy" :"rgb(0, 0, 128)",
@@ -394,6 +394,8 @@ class Svg():
       attr[a] = None
     self.attributes = [ attr ]
     self.defs = { }
+    self.symbols = { }
+    
     for n in self.dom.childNodes:
       if n.nodeType == Node.ELEMENT_NODE and n.tagName == "svg":
         if n.hasAttribute("viewBox"):
@@ -437,12 +439,17 @@ class Svg():
       self.out.write('</ipestyle>\n')
 
   def collect_definitions(self, node):
-    for n in node.childNodes:
-      if n.nodeType != Node.ELEMENT_NODE:
-        return
-      if hasattr(self, "def_" + n.tagName):
-        getattr(self, "def_" + n.tagName)(n)
-    
+    # Collect Everything inside a <defs> tag for which we have a defs_<tagname>() method
+    defs_children = node.getElementsByTagName('defs')
+    for c in defs_children:
+      for my_attr in dir(self):
+        if my_attr[:4] == 'def_':
+          tag_name = my_attr[4:]
+          # There is a parsing method for tags named <tag_name>
+          parseable_tags = node.getElementsByTagName(tag_name)
+          for tag in parseable_tags:
+            getattr(self, my_attr)(tag)
+
   def parse_svg(self, outname, **kwargs):
     """ parses the svg, and writes it to file.
         outname, str, output filename. if '--' then parse_svg writes to stdout.
@@ -494,7 +501,7 @@ class Svg():
     for n in root.childNodes:
       if n.nodeType != Node.ELEMENT_NODE:
         continue
-      
+
       if n.tagName in ignored_nodes:
         continue
 
@@ -565,6 +572,12 @@ class Svg():
 
   def node_inkscape_clipboard(self, node):
     self.parse_nodes(node)
+
+  def def_symbol(self, node):
+    # Symbols are parsed by pretending the symbol node is a group node and storing it in
+    # self.symbols. Later, whenever a <use ...> tag is encountered,
+    # we call node_g() on the fake group node.
+    self.symbols[node.getAttribute('id')] = node
 
   def def_linearGradient(self, n):
     #printAttributes(n)
@@ -738,6 +751,54 @@ class Svg():
     self.parse_nodes(group)
     self.out.write('</group>\n')
     self.attributes.pop()
+
+  def node_use(self, n):
+    if not n.hasAttribute('xlink:href'):
+      print("Ignoring use node without xlink:href")
+      return
+
+    symbol_name = n.getAttribute('xlink:href')
+    if symbol_name[0] != '#':
+      print("Ignoring use node not referencing symbol ID")
+      return
+
+    symbol_name = symbol_name[1:]
+
+    if symbol_name not in self.symbols:
+      print("Ignoring use node for unknown symbol '{}'".format(symbol_name))
+      return
+
+    translate_x = '0'
+    if n.hasAttribute('x'):
+      translate_x = n.getAttribute('x')
+      translate_y = '0'
+    if n.hasAttribute('y'):
+      translate_y = n.getAttribute('y')
+
+    scale_x = 1.0
+    if n.hasAttribute('width'):
+      if n.getAttribute('width')[-1] != '%':
+        print("Ignoring use with non-relative width scale.")
+        return
+      scale_x = float(n.getAttribute('width')[:-1]) / 100.0
+
+    scale_y = 1.0
+    if n.hasAttribute('height'):
+      if n.getAttribute('height')[-1] != '%':
+        print("Ignoring use with non-relative height scale.")
+        return
+      scale_y = float(n.getAttribute('height')[:-1]) / 100.0
+
+    scale_m = Matrix("scale({} {})".format(scale_x, scale_y))
+    translate_m = Matrix(
+      "translate({} {})".format(translate_x, translate_y))
+    m = scale_m * translate_m
+
+    # Use a group for the possible transform matrix from this
+    # use node
+    self.out.write('<group   matrix="{}">\n'.format(m))
+    self.node_g(self.symbols[symbol_name])
+    self.out.write('</group>\n')
 
   def node_a(self, n):
     url = n.getAttribute("xlink:href")
@@ -1036,7 +1097,6 @@ class Svg():
     attr = self.parse_attributes(n)
     self.write_pathattributes(attr)
     self.out.write('>\n')
-    d = n.getAttribute("d")
     parse_path(self.out, d)
     self.out.write('</path>\n')
 
@@ -1056,10 +1116,10 @@ def parse_arguments():
     parser.add_argument('-c', '--clipboard', dest='clipboard',
         action='store_true',
         help="""
-        if -c is present, svg data is written as clipboard content. 
-        This allows pasting svg data from inkscape to ipe: 
+        if -c is present, svg data is written as clipboard content.
+        This allows pasting svg data from inkscape to ipe:
         (1) Copy Inkscape elements to clipboard,
-        (2) run: 'xsel | ./svgtoipe.py -c -- | xsel -i', 
+        (2) run: 'xsel | ./svgtoipe.py -c -- | xsel -i',
         (3) paste clipboard content into Ipe.
         """)
 
