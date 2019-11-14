@@ -188,14 +188,22 @@ def parse_path(out, d):
     if opcode == 'M':
       x, y = pnext(d, 2)
       x0, y0 = x, y
-      out.write("%g %g m\n" % (x, y))
+      # If this moveto command is the last command, it starts a nonsensical empty
+      # new subpath, with crashes ipe. Thus, we skip this command in this case.
+      # See also https://github.com/otfried/ipe-issues/issues/274
+      if d:
+        out.write("%g %g m\n" % (x, y))
       opcode = 'L'
     elif opcode == 'm':
       x1, y1 = pnext(d, 2)
       x += x1
       y += y1
       x0, y0 = x, y
-      out.write("%g %g m\n" % (x, y))
+      # If this moveto command is the last command, it starts a nonsensical empty
+      # new subpath, with crashes ipe. Thus, we skip this command in this case.
+      # See also https://github.com/otfried/ipe-issues/issues/274
+      if d:
+        out.write("%g %g m\n" % (x, y))
       opcode = 'l'
     elif opcode == 'L':
       x, y = pnext(d, 2)
@@ -1016,6 +1024,11 @@ class Svg():
     self.out.write('</path>\n')
 
   def node_path(self, n):
+    d = n.getAttribute("d")
+    if len(d) == 0:
+      # Empty paths crash ipe, filter them out
+      return
+    
     self.out.write('<path')
     m = parse_transform(n)
     if m:
