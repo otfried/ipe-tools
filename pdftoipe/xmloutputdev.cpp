@@ -198,8 +198,8 @@ void XmlOutputDev::eoFill(GfxState *state)
 
 void XmlOutputDev::doPath(GfxState *state)
 {
-  GfxPath *path = state->getPath();
-  GfxSubpath *subpath;
+  const GfxPath *path = state->getPath();
+  const GfxSubpath *subpath;
   int n, m, i, j;
 
   n = path->getNumSubpaths();
