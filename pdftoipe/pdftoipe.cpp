@@ -2,6 +2,7 @@
 // Pdftoipe: convert PDF file to editable Ipe XML file
 // --------------------------------------------------------------------
 
+#include <memory>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 
   GooString *fileName = new GooString(argv[1]);
 
-  globalParams = new GlobalParams();
+  globalParams = std::make_unique<GlobalParams>();
   if (quiet)
     globalParams->setErrQuiet(quiet);
 
@@ -153,7 +154,6 @@ int main(int argc, char *argv[])
   // clean up
   delete xmlOut;
   delete doc;
-  delete globalParams;
 
   return exitCode;
 }
