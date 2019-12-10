@@ -64,6 +64,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 Changes
 =======
 
+ * 2019/12/10
+   Add rudimentary support for <use> and <symbol> (thanks to Lukas
+   Barth #40). 
+
  * 2019/08/01
    Handle missing attributes in various elements. More color
    keywords. A test script to go through SVG samples.  Handle 'a'

@@ -32,7 +32,7 @@
 #
 # --------------------------------------------------------------------
 
-svgtoipe_version = "20190801"
+svgtoipe_version = "20191210"
 
 import sys
 import argparse

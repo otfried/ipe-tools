@@ -46,7 +46,7 @@ option) any later version.
 Compiling
 =========
 
-You need the Poppler library (http://poppler.freedesktop.org) v0.73.0
+You need the Poppler library (http://poppler.freedesktop.org) v0.83.0
 or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev'
 and 'libpoppler-private-dev'.
 
@@ -57,7 +57,15 @@ make
 This will create the single executable "pdftoipe".  Copy it to
 wherever you like.  You may also install the man page "pdftoipe.1".
 
-To compile with poppler <= v0.68, check out branch "old-poppler".
+If there are compilation errors, you most likely have a different
+poppler version.  Poppler has changed dramatically during the last
+releases, as the developers are updating the code to use modern C++.
+
+If your poppler version is <= v0.68, then you can check out branch
+"old-poppler" from the "ipe-tools" repository.  If you have a version
+between v0.69 and v0.82 and cannot upgrade poppler easily, you need to
+look in the release history below and checkout the right release of
+the "ipe-tools" repository. 
 
 If you want to compile pdftoipe on Windows, please refer to
 "compile_on_windows.pdf", written by Daniel Beckmann.
@@ -67,12 +75,15 @@ If you want to compile pdftoipe on Windows, please refer to
 Changes
 =======
 
+ * 2019/12/10 (v7.2.13.1)
+   Compilation with poppler 0.83.0 (#42).
+
  * 2019/01/08
    More changes to compile with poppler 0.73.0.
 
  * 2018/12/07
    Changes to compile with poppler 0.72.0. GString is now based on
-   std::string and may be gettng deprecated soon so get rid of some
+   std::string and may be getting deprecated soon so get rid of some
    uses.
 
 * 2018/11/01
