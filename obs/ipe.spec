@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.13
+Version:        7.2.14
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -135,6 +135,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Sat Apr 18 2020 Otfried Cheong <ipe@otfried.org> - 7.2.14-1
+- New upstream version.
+
 * Mon Oct 07 2019 Otfried Cheong <ipe@otfried.org> - 7.2.13-1
 - New upstream version.
 
