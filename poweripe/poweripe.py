@@ -265,6 +265,11 @@ class PowerIpe:
   
     self.prs.slide_width = Pt(layout.papersize.x)
     self.prs.slide_height = Pt(layout.papersize.y)
+
+    # set formatting of page title placeholder
+    tph = self.title_slide_layout.slide_master.placeholders[0]
+    # make sure the title width is not excessive
+    tph.width = min(tph.width, Pt(0.8 * layout.papersize.x))
   
     for pageNo in range(1, len(self.doc) + 1):
       p = self.doc[pageNo]
