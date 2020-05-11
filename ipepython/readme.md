@@ -13,7 +13,7 @@ You'll need to fill in the arguments to find the Lua and Ipe header
 files and library in `setup.py`.  Then say
 ```
 python3 setup.py build
-sudo python3 setup.py install
+python3 setup.py install --user
 ```
 
 ## Documentation
