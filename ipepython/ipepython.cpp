@@ -757,12 +757,13 @@ static void setup_config(lua_State *L)
   lua_setfield(L, -2, "version");
 
   lua_setfield(L, -2, "config");  // set as ipe.config
+  lua_pop(L, 1);
 }
 #endif
 
 static bool populate_module(PyObject *m, lua_State *L)
 {
-  // ipe table is at the top of the stack
+  lua_getglobal(L, "ipe");
   lua_pushnil(L);
   while (lua_next(L, -2) != 0) {
     PyObject *obj = LuaConvert(L, -1);
