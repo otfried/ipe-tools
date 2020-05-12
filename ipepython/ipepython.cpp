@@ -15,10 +15,15 @@ extern "C" {
 #include <lualib.h>
 }
 
-#include "ipebase.h"
+// to include a small table with some info about Ipe configuration
+#define IPELUA_CONFIG 0
 
 // for testing direct execution of Lua code, not used for Ipe bindings
 #define IPELUA_EVAL 0
+
+#if IPELUA_CONFIG
+#include "ipebase.h"
+#endif
 
 // --------------------------------------------------------------------
 
@@ -733,6 +738,7 @@ static struct PyModuleDef ipelua_module = {
 
 // --------------------------------------------------------------------
 
+#if IPELUA_CONFIG
 static void push_string(lua_State *L, ipe::String str)
 {
   lua_pushlstring(L, str.data(), str.size());
@@ -752,6 +758,7 @@ static void setup_config(lua_State *L)
 
   lua_setfield(L, -2, "config");  // set as ipe.config
 }
+#endif
 
 static bool populate_module(PyObject *m, lua_State *L)
 {
@@ -785,7 +792,9 @@ PyMODINIT_FUNC PyInit_ipe(void)
     LuaState = luaL_newstate();
     luaL_openlibs(LuaState);
     luaopen_ipe(LuaState);
+#if IPELUA_CONFIG
     setup_config(LuaState);
+#endif
     bool ok = populate_module(m, LuaState);
     lua_settop(LuaState, 0);
     if (!ok) return nullptr;
