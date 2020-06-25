@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.19
+Version:        7.2.20
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -57,6 +57,8 @@ The header files necessary to link against ipelib.
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-styles.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-master.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/add-style.lua
+sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/onepage.lua
+sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/page-labels.lua
 
 %build
 export IPEPREFIX="%{_usr}"
@@ -137,6 +139,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Thu Jun 25 2020 Otfried Cheong <ipe@otfried.org> - 7.2.20-1
+- New upstream version.
+
 * Sun Jun 14 2020 Otfried Cheong <ipe@otfried.org> - 7.2.19-1
 - New upstream version.
 

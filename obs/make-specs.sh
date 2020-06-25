@@ -4,7 +4,7 @@
 # To create a new version, update IPEVERS below and add a new entry in debian/changelog
 # Then run bash make-specs.sh, and upload the three files to build.opensuse.org
 
-IPEVERS="7.2.19"
+IPEVERS="7.2.20"
 DEBVERS="1"
 
 SOURCES=~/ipe-$IPEVERS-src.tar.gz
