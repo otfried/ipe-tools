@@ -118,11 +118,6 @@ void XmlOutputDev::setTextHandling(bool math, bool notext,
 
 // ----------------------------------------------------------
 
-void XmlOutputDev::startPage(int pageNum, GfxState *state)
-{
-  startPage(pageNum, state, NULL);  // for poppler <= 0.22
-}
-
 void XmlOutputDev::startPage(int pageNum, GfxState *state, XRef *xrefA)
 {
   writePSFmt("<!-- Page: %d %d -->\n", pageNum, seqPage);
@@ -248,7 +243,7 @@ void XmlOutputDev::drawChar(GfxState *state, double x, double y,
 			    double dx, double dy,
 			    double originX, double originY,
 			    CharCode code, int nBytes, 
-			    Unicode *u, int uLen)
+			    const Unicode *u, int uLen)
 {
   // check for invisible text -- this is used by Acrobat Capture
   if ((state->getRender() & 3) == 3)
@@ -326,7 +321,7 @@ void XmlOutputDev::finishText()
 
 void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
                              int width, int height, GfxImageColorMap *colorMap,
-                             bool interpolate, int *maskColors, 
+                             bool interpolate, const int *maskColors, 
                              bool inlineImg)
 {
   finishText();

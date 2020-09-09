@@ -14,7 +14,7 @@
 class GfxPath;
 class GfxFont;
 
-#define PDFTOIPE_VERSION "2019/12/10"
+#define PDFTOIPE_VERSION "2020/09/09"
 
 class XmlOutputDev : public OutputDev
 {
@@ -28,7 +28,7 @@ public:
   virtual ~XmlOutputDev();
 
   // Check if file was successfully created.
-  virtual bool isOk() { return ok; }
+  bool isOk() { return ok; }
 
   bool hasUnicode() const { return iUnicode; }
 
@@ -39,49 +39,48 @@ public:
 
   // Does this device use upside-down coordinates?
   // (Upside-down means (0,0) is the top left corner of the page.)
-  virtual bool upsideDown() { return false; }
+  virtual bool upsideDown() override { return false; }
 
   // Does this device use drawChar() or drawString()?
-  virtual bool useDrawChar() { return true; }
+  virtual bool useDrawChar() override { return true; }
 
   // Does this device use beginType3Char/endType3Char?  Otherwise,
   // text in Type 3 fonts will be drawn with drawChar/drawString.
-  virtual bool interpretType3Chars() { return false; }
+  virtual bool interpretType3Chars() override { return false; }
 
   //----- initialization and control
 
   // Start a page.
-  virtual void startPage(int pageNum, GfxState *state); // poppler <=0.22
-  virtual void startPage(int pageNum, GfxState *state, XRef *xrefA);
+  virtual void startPage(int pageNum, GfxState *state, XRef *xrefA) override;
 
   // End a page.
-  virtual void endPage();
+  virtual void endPage() override;
 
   //----- update graphics state
-  virtual void updateTextPos(GfxState *state);
-  virtual void updateTextShift(GfxState *state, double shift);
+  virtual void updateTextPos(GfxState *state) override;
+  virtual void updateTextShift(GfxState *state, double shift) override;
 
   //----- path painting
-  virtual void stroke(GfxState *state);
-  virtual void fill(GfxState *state);
-  virtual void eoFill(GfxState *state);
+  virtual void stroke(GfxState *state) override;
+  virtual void fill(GfxState *state) override;
+  virtual void eoFill(GfxState *state) override;
 
   //----- text drawing
   virtual void drawChar(GfxState *state, double x, double y,
 			double dx, double dy,
 			double originX, double originY,
-			CharCode code, int nBytes, Unicode *u, int uLen);
+			CharCode code, int nBytes, const Unicode *u, int uLen) override;
 
   //----- image drawing
   virtual void drawImage(GfxState *state, Object *ref, Stream *str,
 			 int width, int height, GfxImageColorMap *colorMap,
-			 bool interpolate, int *maskColors, bool inlineImg);
+			 bool interpolate, const int *maskColors, bool inlineImg) override;
 
 protected:
-  virtual void startDrawingPath();
-  virtual void startText(GfxState *state, double x, double y);
-  virtual void finishText();
-  virtual void writePSUnicode(int ch);
+  void startDrawingPath();
+  void startText(GfxState *state, double x, double y);
+  void finishText();
+  void writePSUnicode(int ch);
   
   void doPath(GfxState *state);
   void writePSChar(int code);

@@ -28,7 +28,7 @@ the mailing list, where anyone interested can participate than by
 direct Email.
 
 	Otfried Cheong
-	Dept. of Computer Science
+	School of Computing
 	KAIST
 	Daejeon, South Korea
 	Email: ipe@otfried.org
@@ -46,7 +46,7 @@ option) any later version.
 Compiling
 =========
 
-You need the Poppler library (http://poppler.freedesktop.org) v0.83.0
+You need the Poppler library (http://poppler.freedesktop.org) v0.86.0
 or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev'
 and 'libpoppler-private-dev'.
 
@@ -63,17 +63,21 @@ releases, as the developers are updating the code to use modern C++.
 
 If your poppler version is <= v0.68, then you can check out branch
 "old-poppler" from the "ipe-tools" repository.  If you have a version
-between v0.69 and v0.82 and cannot upgrade poppler easily, you need to
+between v0.69 and v0.85 and cannot upgrade poppler easily, you need to
 look in the release history below and checkout the right release of
 the "ipe-tools" repository. 
 
 If you want to compile pdftoipe on Windows, please refer to
-"compile_on_windows.pdf", written by Daniel Beckmann.
+"compile_on_windows.pdf", written by Daniel Beckmann.  I have not been
+able to get this to work myself for recent versions of poppler.
 
 --------------------------------------------------------------------
 
 Changes
 =======
+
+ * 2020/09/09 (v7.2.20.1)
+   Compatibility with poppler 0.86.0 (#47).
 
  * 2019/12/10 (v7.2.13.1)
    Compilation with poppler 0.83.0 (#42).
@@ -86,7 +90,7 @@ Changes
    std::string and may be getting deprecated soon so get rid of some
    uses.
 
-* 2018/11/01
+ * 2018/11/01
    Poppler keeps changing: gBool -> bool (issue #31).
 
  * 2018/10/23
@@ -161,8 +165,7 @@ Changes
    Packaged pdftoipe separately from Ipe.
 
  * 2003/06/04
-   Fixed handling of transformation matrix in Pdftoipe.  Pdftoipe
-   is now actually considered supported.
+   Fixed handling of transformation matrix in Pdftoipe.  
 
    Added option -math to pdftoipe.  With this option, all text objects 
    are turned into math formulas. 
