@@ -14,6 +14,7 @@ Build-Depends: sharutils,
                libpng-dev,
                liblua5.3-dev,
 	       libgsl-dev,
+	       libspiro-dev,
 	       libcurl4-openssl-dev
 Homepage: http://ipe.otfried.org/
 

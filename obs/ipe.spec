@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.22
+Version:        7.2.23
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -16,6 +16,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  zlib-devel
 BuildRequires:	libjpeg-devel
 BuildRequires:  gsl-devel
+BuildRequires:  libspiro-devel
 
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Gui)
@@ -79,8 +80,6 @@ popd
 export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
 export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
-export IPECURL=1
-export IPEGSL=1
 pushd src
 make INSTALL_ROOT=$RPM_BUILD_ROOT install \
      INSTALL_PROGRAMS="install -m 0755"
@@ -139,10 +138,13 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Mon Dec 21 2020 Otfried Cheong <ipe@otfried.org> - 7.2.23-1
+- New upstream version.
+
 * Sun Dec 20 2020 Otfried Cheong <ipe@otfried.org> - 7.2.22-1
 - New upstream version.
 
-* Thu Oct 26 2020 Otfried Cheong <ipe@otfried.org> - 7.2.21-1
+* Mon Oct 26 2020 Otfried Cheong <ipe@otfried.org> - 7.2.21-1
 - New upstream version.
 
 * Thu Jun 25 2020 Otfried Cheong <ipe@otfried.org> - 7.2.20-1

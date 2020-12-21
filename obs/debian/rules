@@ -1,14 +1,16 @@
 #!/usr/bin/make -f
 
 export IPEPREFIX=/usr
-export IPECURL=1
-export IPEGSL=1
 export INSTALL_ROOT=$(shell pwd)/debian/tmp
 
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 
 # Tell qtchooser which version we want.
 export QT_SELECT=qt5
+
+# libspiro before 201907 apparently had no pkg-config 
+export SPIRO_LIBS=-lspiro
+export SPIRO_CFLAGS=
 
 %:
 	rm -f build/doc/jquery.js
