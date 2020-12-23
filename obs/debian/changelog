@@ -1,3 +1,9 @@
+ipe (7.2.23-2) unstable; urgency=medium
+
+  * Run doxygen as part of the build process.
+
+ -- Otfried Cheong <ipe@otfried.org>  Wed, 23 Dec 2020 12:30:00 +0100
+
 ipe (7.2.23-1) unstable; urgency=medium
 
   * New version.

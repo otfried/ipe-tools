@@ -5,7 +5,7 @@
 # Then run bash make-specs.sh, and upload the three files to build.opensuse.org
 
 IPEVERS="7.2.23"
-DEBVERS="1"
+DEBVERS="2"
 
 SOURCES=~/LastIpeRelease/ipe-$IPEVERS-src.tar.gz
 
@@ -28,7 +28,7 @@ Binary: ipe
 Maintainer: Otfried Cheong <ipe@otfried.org>
 Architecture: any
 Homepage: http://ipe.otfried.org/
-Build-Depends: sharutils, debhelper (>= 9~), zlib1g-dev, qtbase5-dev, qtbase5-dev-tools, libfreetype6-dev, libcairo2-dev, libjpeg-dev, libpng-dev, liblua5.3-dev, libgsl-dev, libspiro-dev, libcurl4-openssl-dev, libfontconfig1-dev
+Build-Depends: sharutils, doxygen, debhelper (>= 9~), zlib1g-dev, qtbase5-dev, qtbase5-dev-tools, libfreetype6-dev, libcairo2-dev, libjpeg-dev, libpng-dev, liblua5.3-dev, libgsl-dev, libspiro-dev, libcurl4-openssl-dev, libfontconfig1-dev
 Files:
 EOF
 

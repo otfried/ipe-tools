@@ -2,7 +2,7 @@
 
 Name:           ipe
 Version:        7.2.23
-Release:        1
+Release:        2
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
 License:        GPL-3.0-or-later
@@ -12,6 +12,7 @@ Source0:	%{name}-%{version}-src.tar.gz
 
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig
+BuildRequires:  doxygen
 
 BuildRequires:  zlib-devel
 BuildRequires:	libjpeg-devel
@@ -74,6 +75,7 @@ export LUA_PACKAGE=lua
 
 pushd src
 make %{_smp_mflags}
+make documentation
 popd 
 
 %install
@@ -138,6 +140,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Wed Dec 23 2020 Otfried Cheong <ipe@otfried.org> - 7.2.23-2
+- Run doxygen as part of build process.
+
 * Mon Dec 21 2020 Otfried Cheong <ipe@otfried.org> - 7.2.23-1
 - New upstream version.
 

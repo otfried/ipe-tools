@@ -13,8 +13,10 @@ export SPIRO_LIBS=-lspiro
 export SPIRO_CFLAGS=
 
 %:
-	rm -f build/doc/jquery.js
 	dh $@ --sourcedirectory=src
+
+override_dh_auto_build:
+	dh_auto_build -- all documentation
 
 override_dh_install: 
 	dh_install
