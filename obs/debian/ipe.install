@@ -1,4 +1,5 @@
 usr/bin
+usr/lib/lib*.so
 usr/share/ipe
 usr/share/man
 usr/lib/ipe/*/ipelets

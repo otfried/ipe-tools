@@ -40,11 +40,3 @@ Description: The Ipe extensible drawing editor
     modes.
   * Users can provide ipelets (Ipe plug-ins) to add functionality to
     Ipe.  This way, Ipe can be extended for each task at hand.
-
-Package: libipe
-Architecture: any
-Section: libs
-Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Description: Shared libraries used by Ipe
- This package provides shared libraries used by Ipe and its extensions.

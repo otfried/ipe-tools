@@ -5,7 +5,7 @@
 # Then run bash make-specs.sh, and upload the three files to build.opensuse.org
 
 IPEVERS="7.2.23"
-DEBVERS="2"
+DEBVERS="3"
 
 SOURCES=~/LastIpeRelease/ipe-$IPEVERS-src.tar.gz
 
