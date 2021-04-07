@@ -1,8 +1,8 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.23
-Release:        2
+Version:        7.2.24
+Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
 License:        GPL-3.0-or-later
@@ -100,6 +100,7 @@ popd
 %{_bindir}/ipe6upgrade
 %{_bindir}/ipeextract
 %{_bindir}/iperender
+%{_bindir}/iperender-par
 %{_bindir}/ipescript
 %{_bindir}/ipetoipe
 %{_bindir}/ipecurl
@@ -140,6 +141,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Wed Apr 07 2021 Otfried Cheong <ipe@otfried.org> - 7.2.24-1
+- New upstream version.
+
 * Wed Dec 23 2020 Otfried Cheong <ipe@otfried.org> - 7.2.23-2
 - Run doxygen as part of build process.
 
