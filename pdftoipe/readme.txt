@@ -67,14 +67,13 @@ between v0.69 and v0.85 and cannot upgrade poppler easily, you need to
 look in the release history below and checkout the right release of
 the "ipe-tools" repository. 
 
-If you want to compile pdftoipe on Windows, please refer to
-"compile_on_windows.pdf", written by Daniel Beckmann.  I have not been
-able to get this to work myself for recent versions of poppler.
-
 --------------------------------------------------------------------
 
 Changes
 =======
+
+ * 2021/09/08 (v7.2.24.1)
+   Add -notextsize flag.
 
  * 2020/09/09 (v7.2.20.1)
    Compatibility with poppler 0.86.0 (#47).

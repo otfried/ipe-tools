@@ -14,7 +14,7 @@
 class GfxPath;
 class GfxFont;
 
-#define PDFTOIPE_VERSION "2020/09/09"
+#define PDFTOIPE_VERSION "2021/09/08"
 
 class XmlOutputDev : public OutputDev
 {
@@ -33,7 +33,7 @@ public:
   bool hasUnicode() const { return iUnicode; }
 
   void setTextHandling(bool math, bool notext, bool literal,
-                       int mergeLevel, int unicodeLevel);
+                       int mergeLevel, bool noTextSize, int unicodeLevel);
   
   //---- get info about output device
 
@@ -99,6 +99,7 @@ protected:
   bool iIsMath;                 // make text objects math formulas
   bool iNoText;                 // discard text objects
   bool inText;                  // inside a text object
+  bool iNoTextSize;             // all text objects at normal size
   int  iMergeLevel;             // text merge level
   int iUnicodeLevel;            // unicode handling
 };

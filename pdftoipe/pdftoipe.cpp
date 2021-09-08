@@ -35,6 +35,7 @@ static bool printHelp = false;
 static bool math = false;
 static bool literal = false;
 static bool notext = false;
+static bool noTextSize = false;
 
 static ArgDesc argDesc[] = {
   {"-f",      argInt,      &firstPage,      0,
@@ -53,7 +54,9 @@ static ArgDesc argDesc[] = {
    "allow math mode in input text objects"},
   {"-notext", argFlag,     &notext,         0,
    "discard all text objects"},
-  {"-merge",  argInt,      &mergeLevel,       0,
+  {"-notextsize", argFlag, &noTextSize,     0,
+   "ignore size of text objects"},
+  {"-merge",  argInt,      &mergeLevel,     0,
    "how eagerly should consecutive text be merged: 0, 1, or 2 (default 0)"},
   {"-unicode",  argInt,    &unicodeLevel,       0,
    "how much Unicode should be used: 1, 2, or 3 (default 1)"},
@@ -132,7 +135,7 @@ int main(int argc, char *argv[])
                      doc->getCatalog(), firstPage, lastPage);
 
   // tell output device about text handling
-  xmlOut->setTextHandling(math, notext, literal, mergeLevel, unicodeLevel);
+  xmlOut->setTextHandling(math, notext, literal, mergeLevel, noTextSize, unicodeLevel);
   
   int exitCode = 2;
   if (xmlOut->isOk()) {

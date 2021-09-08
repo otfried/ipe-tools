@@ -102,12 +102,13 @@ XmlOutputDev::~XmlOutputDev()
 
 void XmlOutputDev::setTextHandling(bool math, bool notext, 
                                    bool literal, int mergeLevel,
-                                   int unicodeLevel)
+				   bool noTextSize, int unicodeLevel)
 {
   iIsMath = math;
   iNoText = notext;
   iIsLiteral = literal;
   iMergeLevel = mergeLevel;
+  iNoTextSize = noTextSize;
   iUnicodeLevel = unicodeLevel;
   if (iUnicodeLevel >= 2) {
     writePS("<ipestyle>\n");
@@ -297,10 +298,13 @@ void XmlOutputDev::startText(GfxState *state, double x, double y)
 
   GfxRGB rgb;
   state->getFillRGB(&rgb);
-  writeColor("<text stroke=", rgb, " pos=\"0 0\" transformations=\"affine\" ");
+  writeColor("<text stroke=", rgb, " pos=\"0 0\" ");
+  if (iNoTextSize)
+    writePS("transformations=\"rigid\" ");
+  else
+    writePSFmt("transformations=\"affine\" size=\"%g\" ", state->getFontSize());
   writePS("valign=\"baseline\" ");
-  writePSFmt("size=\"%g\" matrix=\"%g %g %g %g %g %g\">",
-	     state->getFontSize(), M[0], M[1], M[2], M[3], xt, yt);
+  writePSFmt("matrix=\"%g %g %g %g %g %g\">", M[0], M[1], M[2], M[3], xt, yt);
 
   if (iIsMath)
     writePS("$");
