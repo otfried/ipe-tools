@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.24
+Version:        7.2.25
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -68,6 +68,8 @@ export IPELIBDIR="%{_libdir}"
 export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
 export IPECURL=1
 export IPE_NO_IPELIB_VERSION_CHECK=1
+# I don't know how to install the QtSpell package in a way that works on Fedora and Suse 
+export IPE_NO_SPELLCHECK=1
 
 export QT_SELECT=qt5
 export MOC=moc-qt5
@@ -141,6 +143,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Sun Jun 19 2022 Otfried Cheong <ipe@otfried.org> - 7.2.25-1
+- New upstream version.
+
 * Wed Apr 07 2021 Otfried Cheong <ipe@otfried.org> - 7.2.24-1
 - New upstream version.
 
