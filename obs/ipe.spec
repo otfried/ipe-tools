@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.25
+Version:        7.2.26
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -32,6 +32,7 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(lua) >= 5.3
 BuildRequires:  pkgconfig(libcurl)
 
+Requires:       qt5-qtsvg
 #Requires:       tex(latex)
 #Requires:       xdg-utils
 
@@ -143,6 +144,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Sat Jul 16 2022 Otfried Cheong <ipe@otfried.org> - 7.2.26-1
+- New upstream version.
+
 * Sun Jun 19 2022 Otfried Cheong <ipe@otfried.org> - 7.2.25-1
 - New upstream version.
 
