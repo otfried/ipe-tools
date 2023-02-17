@@ -220,7 +220,7 @@ void XmlOutputDev::doPath(GfxState *state)
 	++j;
       }
     }
-    if (subpath->isClosed()) {
+    if (subpath->isClosed() && m>1) {
       writePS("h\n");
     }
   }
