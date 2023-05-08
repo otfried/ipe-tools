@@ -3,11 +3,10 @@ Maintainer: Otfried Cheong <ipe@otfried.org>
 Section: graphics
 Priority: optional
 Build-Depends: sharutils,
-	       doxygen,
                debhelper (>= 9~),
                zlib1g-dev,
-               qtbase5-dev,
-               qtbase5-dev-tools,
+               qtbase6-dev,
+               qtbase6-dev-tools,
                libfreetype6-dev,
                libcairo2-dev,
 	       libfontconfig1-dev,

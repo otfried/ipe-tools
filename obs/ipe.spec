@@ -1,7 +1,7 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.26
+Version:        7.2.27
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
@@ -12,16 +12,15 @@ Source0:	%{name}-%{version}-src.tar.gz
 
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig
-BuildRequires:  doxygen
 
 BuildRequires:  zlib-devel
 BuildRequires:	libjpeg-devel
 BuildRequires:  gsl-devel
 BuildRequires:  libspiro-devel
 
-BuildRequires:  pkgconfig(Qt5Core)
-BuildRequires:  pkgconfig(Qt5Gui)
-BuildRequires:  pkgconfig(Qt5Widgets)
+BuildRequires:  pkgconfig(Qt6Core)
+BuildRequires:  pkgconfig(Qt6Gui)
+BuildRequires:  pkgconfig(Qt6Widgets)
 BuildRequires:  pkgconfig(cairo) >= 1.10.0
 BuildRequires:  pkgconfig(cairo-ft) >= 1.10.0
 BuildRequires:  pkgconfig(cairo-pdf)
@@ -32,7 +31,7 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(lua) >= 5.3
 BuildRequires:  pkgconfig(libcurl)
 
-Requires:       qt5-qtsvg
+Requires:       qt6-qtsvg
 #Requires:       tex(latex)
 #Requires:       xdg-utils
 
@@ -72,13 +71,11 @@ export IPE_NO_IPELIB_VERSION_CHECK=1
 # I don't know how to install the QtSpell package in a way that works on Fedora and Suse 
 export IPE_NO_SPELLCHECK=1
 
-export QT_SELECT=qt5
-export MOC=moc-qt5
+export MOC=/usr/lib/qt6/libexec/moc
 export LUA_PACKAGE=lua
 
 pushd src
 make %{_smp_mflags}
-make documentation
 popd 
 
 %install
@@ -126,7 +123,6 @@ popd
 %{_datadir}/ipe/%{version}/lua
 %{_datadir}/ipe/%{version}/styles
 %{_datadir}/ipe/%{version}/scripts
-%{_datadir}/ipe/%{version}/doc
 
 %{_mandir}/man1/ipe.1.gz
 %{_mandir}/man1/ipe6upgrade.1.gz
@@ -144,6 +140,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Mon May 08 2023 Otfried Cheong <ipe@otfried.org> - 7.2.27-1
+- New upstream version.
+
 * Sat Jul 16 2022 Otfried Cheong <ipe@otfried.org> - 7.2.26-1
 - New upstream version.
 

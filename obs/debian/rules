@@ -6,9 +6,6 @@ export INSTALL_ROOT=$(shell pwd)/debian/tmp
 #export DH_VERBOSE=1
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 
-# Tell qtchooser which version we want.
-export QT_SELECT=qt5
-
 # libspiro before 201907 apparently had no pkg-config 
 export SPIRO_LIBS=-lspiro
 export SPIRO_CFLAGS=
@@ -17,7 +14,7 @@ export SPIRO_CFLAGS=
 	dh $@ --sourcedirectory=src
 
 override_dh_auto_build:
-	dh_auto_build -- all documentation
+	dh_auto_build -- all
 
 override_dh_install: 
 	dh_install
