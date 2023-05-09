@@ -10,6 +10,14 @@ export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 export SPIRO_LIBS=-lspiro
 export SPIRO_CFLAGS=
 
+# Qt6 hat no pkg-config before 6.3.1
+export QT_CFLAGS=-DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB \
+        -I/usr/include/x86_64-linux-gnu/qt6/QtWidgets \
+        -I/usr/include/x86_64-linux-gnu/qt6/QtGui \
+        -I/usr/include/x86_64-linux-gnu/qt6/QtCore \
+        -I/usr/include/x86_64-linux-gnu/qt6
+export QT_LIBS=-lQt6Widgets -lQt6Gui -lQt6Core
+
 %:
 	dh $@ --sourcedirectory=src
 

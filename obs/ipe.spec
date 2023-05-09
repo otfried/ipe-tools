@@ -30,6 +30,9 @@ BuildRequires:  pkgconfig(freetype2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(lua) >= 5.3
 BuildRequires:  pkgconfig(libcurl)
+%if 0%{?suse_version}
+BuildRequires:  qt6-tools
+%endif
 
 Requires:       qt6-qtsvg
 #Requires:       tex(latex)
@@ -61,6 +64,7 @@ sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/update-master.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/add-style.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/onepage.lua
 sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/page-labels.lua
+sed -i 's#/usr/bin/env ipescript#/usr/bin/ipescript#' scripts/scratchpad.lua
 
 %build
 export IPEPREFIX="%{_usr}"
@@ -71,7 +75,7 @@ export IPE_NO_IPELIB_VERSION_CHECK=1
 # I don't know how to install the QtSpell package in a way that works on Fedora and Suse 
 export IPE_NO_SPELLCHECK=1
 
-export MOC=/usr/lib/qt6/libexec/moc
+export MOC=%{_qt6_libexecdir}/moc
 export LUA_PACKAGE=lua
 
 pushd src
@@ -83,8 +87,7 @@ export IPEPREFIX="%{_usr}"
 export IPELIBDIR="%{_libdir}"
 export IPELETDIR="%{_libdir}/ipe/%{version}/ipelets"
 pushd src
-make INSTALL_ROOT=$RPM_BUILD_ROOT install \
-     INSTALL_PROGRAMS="install -m 0755"
+make INSTALL_ROOT=$RPM_BUILD_ROOT install
 popd
 
 %post -p /sbin/ldconfig
@@ -92,8 +95,8 @@ popd
 %postun -p /sbin/ldconfig
 
 %files
-%license gpl.txt
-%doc readme.txt news.txt
+%license doc/gpl.txt
+%doc README.md doc/news.txt
 
 %{_bindir}/ipe
 %{_bindir}/ipepresenter
