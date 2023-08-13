@@ -28,9 +28,6 @@ the mailing list, where anyone interested can participate than by
 direct Email.
 
 	Otfried Cheong
-	School of Computing
-	KAIST
-	Daejeon, South Korea
 	Email: ipe@otfried.org
 	Ipe webpage: http://ipe.otfried.org
 

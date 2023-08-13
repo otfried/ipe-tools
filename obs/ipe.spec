@@ -1,14 +1,14 @@
 %global majorversion 7.2
 
 Name:           ipe
-Version:        7.2.27
+Version:        7.2.28
 Release:        1
 Summary:        Extensible drawing editor
 Group:          Productivity/Publishing/Presentation
 License:        GPL-3.0-or-later
 #License:        GNU General Public License v3.0 or later
 URL:            http://ipe.otfried.org/
-Source0:	%{name}-%{version}-src.tar.gz
+Source0:	%{name}-%{version}.tar.gz
 
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig
@@ -143,6 +143,9 @@ popd
 %{_libdir}/libipelua.so
 
 %changelog
+* Sun Aug 13 2023 Otfried Cheong <ipe@otfried.org> - 7.2.28-1
+- New upstream version.
+
 * Mon May 08 2023 Otfried Cheong <ipe@otfried.org> - 7.2.27-1
 - New upstream version.
 
