@@ -42,7 +42,7 @@ direct Email.
 
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2019 Otfried Cheong
+Copyright (C) 2009-2024 Otfried Cheong
 
 svgtoipe is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -63,6 +63,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 Changes
 =======
+
+ * 2024/05/16
+   Fix warnings on regular expressions on Python 3.12 (#64).
 
  * 2019/12/10
    Add rudimentary support for <use> and <symbol> (thanks to Lukas

@@ -32,7 +32,7 @@
 #
 # --------------------------------------------------------------------
 
-svgtoipe_version = "20191210"
+svgtoipe_version = "20240516"
 
 import sys
 import argparse
@@ -127,7 +127,7 @@ def parse_opacity(txt):
   return 10 * m
 
 def parse_list(string):
-  return re.findall("([A-Za-z]|-?[0-9]+\.?[0-9]*(?:e-?[0-9]*)?)", string)
+  return re.findall(r"([A-Za-z]|-?[0-9]+\.?[0-9]*(?:e-?[0-9]*)?)", string)
 
 def parse_style(string):
   sdict = {}
@@ -178,7 +178,7 @@ def pnext(d, n):
   return tuple(l)
 
 def parse_path(out, d):
-  d = re.findall("([A-Za-z]|-?(?:\.[0-9]+|[0-9]+\.?[0-9]*)(?:e-?[0-9]+)?)", d)
+  d = re.findall(r"([A-Za-z]|-?(?:\.[0-9]+|[0-9]+\.?[0-9]*)(?:e-?[0-9]+)?)", d)
   x, y = 0.0, 0.0
   xs, ys = 0.0, 0.0
   x0, y0 = 0.0, 0.0
@@ -272,7 +272,7 @@ def parse_path(out, d):
       sys.stderr.write("Unrecognised opcode: %s\n" % opcode)
 
 def parse_transformation(txt):
-  d = re.findall("[a-zA-Z]+\([^)]*\)", txt)
+  d = re.findall(r"[a-zA-Z]+\([^)]*\)", txt)
   m = Matrix()
   while d:
     m1 = Matrix(d.pop(0))
@@ -698,7 +698,7 @@ class Svg():
       self.out.write(' stroke="%g %g %g"' % stroke)
     fill = a["fill"]
     if fill and fill.startswith("url("):
-      mat = re.match("url\(#([^)]+)\).*", fill)
+      mat = re.match(r"url\(#([^)]+)\).*", fill)
       if mat:
         grad = mat.group(1)
         if grad in self.defs and (self.defs[grad][0] == "linearGradient" or
@@ -933,7 +933,7 @@ class Svg():
     h = float(node.getAttribute("height"))
     clipped = False
     if node.hasAttribute("clip-path"):
-      mat = re.match("url\(#([^)]+)\).*", node.getAttribute("clip-path"))
+      mat = re.match(r"url\(#([^)]+)\).*", node.getAttribute("clip-path"))
       if mat:
         cp = mat.group(1)
         if cp in self.defs and self.defs[cp][0] == "clipPath":
