@@ -177,6 +177,32 @@ def pnext(d, n):
     n -= 1
   return tuple(l)
 
+def parse_arc_arg(d):
+  """
+  >>> parse_arc_arg("4.12 4.12 0 0 14.13 0".split())
+  (4.12, 4.12, 0.0, 0.0, 1.0, 4.13, 0.0)
+  """
+  # After opcode 'A' or 'a' follows three numbers, then two flags, then two numbers.
+  # Each flag is a single '0' or '1' not necessarily followed by whitespace,
+  # meaning that in "a 4.12 4.12 0 0 14.13 0", the "1" in "14.13" is a flag,
+  # so the correct parse is ('a', '4.12', '4.12', '0', '0', '1', '4.13', '0').
+  # Further reading: https://svgwg.org/svg2-draft/paths.html#PathDataBNF
+  l = []
+  # First parse the three numbers.
+  l.append(float(d.pop(0)))
+  l.append(float(d.pop(0)))
+  l.append(float(d.pop(0)))
+  # Now parse the two flags and the next number.
+  s = d.pop(0)
+  while len(s) <= 2:
+    s += d.pop(0)
+  l.append(float(s[0]))
+  l.append(float(s[1]))
+  l.append(float(s[2:]))
+  # Now parse the last number.
+  l.append(float(d.pop(0)))
+  return tuple(l)
+
 def parse_path(out, d):
   d = re.findall(r"([A-Za-z]|-?(?:\.[0-9]+|[0-9]+\.?[0-9]*)(?:e-?[0-9]+)?)", d)
   x, y = 0.0, 0.0
@@ -260,7 +286,7 @@ def parse_path(out, d):
       xs, ys = x1, y1
       x, y = xf, yf
     elif opcode == 'A' or opcode == 'a':
-      rx, ry, phi, large_arc, sweep, x2, y2 = pnext(d, 7)
+      rx, ry, phi, large_arc, sweep, x2, y2 = parse_arc_arg(d)
       if opcode == 'a':
         x2 += x; y2 += y
       draw_arc(out, x, y, rx, ry, phi, large_arc, sweep, x2, y2)
