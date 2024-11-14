@@ -149,16 +149,26 @@ void XmlOutputDev::stroke(GfxState *state)
   writeColor("<path stroke=", rgb, 0);
   writePSFmt(" pen=\"%g\"", state->getTransformedLineWidth());
 
-  double *dash;
   double start;
   int length, i;
+  #if POPPLER_VERSION_AT_LEAST(22, 9, 0)
+    std::vector<double> dash = state->getLineDash(&start);
+    length = dash.size();
+  #else
+    double *dash;
+    state->getLineDash(&dash, &length, &start);
+  #endif
 
-  state->getLineDash(&dash, &length, &start);
   if (length) {
     writePS(" dash=\"[");
     for (i = 0; i < length; ++i)
-      writePSFmt("%g%s", state->transformWidth(dash[i]), 
-		 (i == length-1) ? "" : " ");
+      #if POPPLER_VERSION_AT_LEAST(22, 9, 0)
+      writePSFmt("%g%s", state->transformWidth(dash.at(i)),
+ 		 (i == length-1) ? "" : " ");
+      #else
+      writePSFmt("%g%s", state->transformWidth(dash[i]),
+                 (i == length - 1) ? "" : " ");
+      #endif
     writePSFmt("] %g\"", state->transformWidth(start));
   }
     

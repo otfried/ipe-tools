@@ -10,11 +10,16 @@
 #include "Object.h"
 #include "OutputDev.h"
 #include "GfxState.h"
+#include "cpp/poppler-version.h"
 
 class GfxPath;
 class GfxFont;
 
 #define PDFTOIPE_VERSION "2021/09/08"
+#define POPPLER_VERSION_AT_LEAST(major, minor, micro) \
+  ((POPPLER_VERSION_MAJOR > (major)) || \
+  (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR > (minor)) || \
+  (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR == (minor) && POPPLER_VERSION_MICRO >= (micro)))
 
 class XmlOutputDev : public OutputDev
 {

@@ -87,22 +87,46 @@ int main(int argc, char *argv[])
   if (quiet)
     globalParams->setErrQuiet(quiet);
 
-  GooString *ownerPW, *userPW;
+  #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
+    std::optional<GooString> ownerPW, userPW;
+  #else
+    GooString *ownerPW, *userPW;
+  #endif
   if (ownerPassword[0]) {
-    ownerPW = new GooString(ownerPassword);
+    #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
+      ownerPW = GooString(ownerPassword);
+    #else
+      ownerPW = new GooString(ownerPassword);
+    #endif
   } else {
-    ownerPW = 0;
+    #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
+      ownerPW = std::nullopt;
+    #else
+      ownerPW = 0;
+    #endif
   }
   if (userPassword[0]) {
-    userPW = new GooString(userPassword);
+    #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
+      userPW = GooString(userPassword);
+    #else
+      userPW = new GooString(userPassword);
+    #endif
   } else {
-    userPW = 0;
+    #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
+      userPW = std::nullopt;
+    #else
+      userPW = 0;
+    #endif
   }
 
-  // open PDF file
-  PDFDoc *doc = new PDFDoc(fileName, ownerPW, userPW);
-  delete userPW;
-  delete ownerPW;
+    // open PDF file
+    #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
+      PDFDoc *doc = new PDFDoc(std::make_unique<GooString>(fileName), ownerPW, userPW);
+    #else
+      PDFDoc *doc = new PDFDoc(fileName, ownerPW, userPW);
+      delete userPW;
+      delete ownerPW;
+    #endif
 
   if (!doc->isOk())
     return 1;
