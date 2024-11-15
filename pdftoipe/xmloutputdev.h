@@ -15,7 +15,8 @@
 class GfxPath;
 class GfxFont;
 
-#define PDFTOIPE_VERSION "2021/09/08"
+#define PDFTOIPE_VERSION "2024/11/15"
+
 #define POPPLER_VERSION_AT_LEAST(major, minor, micro) \
   ((POPPLER_VERSION_MAJOR > (major)) || \
   (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR > (minor)) || \

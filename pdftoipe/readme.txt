@@ -44,8 +44,8 @@ Compiling
 =========
 
 You need the Poppler library (http://poppler.freedesktop.org) v0.86.0
-or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev'
-and 'libpoppler-private-dev'.
+or greater.  On Debian/Ubuntu, install the packages 'libpoppler-dev',
+'libpoppler-private-dev', and 'libpoppler-cpp-dev'.
 
 In source directory, say
 
@@ -68,6 +68,9 @@ the "ipe-tools" repository.
 
 Changes
 =======
+
+ * 2024/11/15 (v7.2.30.1)
+   Compatibility with poppler 22.02, 22.03, 22.09 (#67).
 
  * 2021/09/08 (v7.2.24.1)
    Add -notextsize flag.
