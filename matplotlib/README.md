@@ -24,6 +24,17 @@ The Ipe backend allows you to save in Ipe format:
 ```
 
 
+Requirements
+------------
+- Python >=3.6
+- Matplotlib  >=3.6
+
+If either `Python` or `Matplotlib` is older than the version 3.6,
+please switch to using `backend_ipe.py` from a previous version
+in the directory `past`.
+
+
+
 Options
 -------
 

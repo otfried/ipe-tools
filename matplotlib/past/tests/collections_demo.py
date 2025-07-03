@@ -1,9 +1,9 @@
+
+
 import matplotlib.pyplot as plt
 from matplotlib import collections, transforms
 from matplotlib.colors import colorConverter
 import numpy as np
-from matplotlib import use
-use('module://backend_ipe')
 
 nverts = 50
 npts = 100
@@ -13,7 +13,7 @@ r = np.array(range(nverts))
 theta = np.array(range(nverts)) * (2*np.pi)/(nverts-1)
 xx = r * np.sin(theta)
 yy = r * np.cos(theta)
-spiral = list(zip(xx, yy))
+spiral = list(zip(xx,yy))
 
 # Make some offsets
 rs = np.random.RandomState([12345678])
@@ -22,28 +22,27 @@ yo = rs.randn(npts)
 xyo = list(zip(xo, yo))
 
 # Make a list of colors cycling through the rgbcmyk series.
-colors = [colorConverter.to_rgba(c)
-          for c in ('r', 'g', 'b', 'c', 'y', 'm', 'k')]
+colors = [colorConverter.to_rgba(c) for c in ('r','g','b','c','y','m','k')]
 
-fig, axes = plt.subplots(2, 2)
-((ax1, ax2), (ax3, ax4)) = axes     # unpack the axes
+fig, axes = plt.subplots(2,2)
+((ax1, ax2), (ax3, ax4)) = axes # unpack the axes
 
 
 col = collections.LineCollection([spiral], offsets=xyo,
-                                 transOffset=ax1.transData)
+                                transOffset=ax1.transData)
 trans = fig.dpi_scale_trans + transforms.Affine2D().scale(1.0/72.0)
 col.set_transform(trans)  # the points to pixels transform
-#       Note: the first argument to the collection initializer
-#       must be a list of sequences of x,y tuples; we have only
-#       one sequence, but we still have to put it in a list.
+    # Note: the first argument to the collection initializer
+    # must be a list of sequences of x,y tuples; we have only
+    # one sequence, but we still have to put it in a list.
 ax1.add_collection(col, autolim=True)
-#       autolim=True enables autoscaling.  For collections with
-#       offsets like this, it is neither efficient nor accurate,
-#       but it is good enough to generate a plot that you can use
-#       as a starting point.  If you know beforehand the range of
-#       x and y that you want to show, it is better to set them
-#       explicitly, leave out the autolim kwarg (or set it to False),
-#       and omit the 'ax1.autoscale_view()' call below.
+    # autolim=True enables autoscaling.  For collections with
+    # offsets like this, it is neither efficient nor accurate,
+    # but it is good enough to generate a plot that you can use
+    # as a starting point.  If you know beforehand the range of
+    # x and y that you want to show, it is better to set them
+    # explicitly, leave out the autolim kwarg (or set it to False),
+    # and omit the 'ax1.autoscale_view()' call below.
 
 # Make a transform for the line segments such that their size is
 # given in points:
@@ -55,7 +54,7 @@ ax1.set_title('LineCollection using offsets')
 
 # The same data as above, but fill the curves.
 col = collections.PolyCollection([spiral], offsets=xyo,
-                                 transOffset=ax2.transData)
+                                transOffset=ax2.transData)
 trans = transforms.Affine2D().scale(fig.dpi/72.0)
 col.set_transform(trans)  # the points to pixels transform
 ax2.add_collection(col, autolim=True)
@@ -67,8 +66,9 @@ ax2.set_title('PolyCollection using offsets')
 
 # 7-sided regular polygons
 
-col = collections.RegularPolyCollection(7, sizes=np.fabs(xx) * 10.0,
-                                        offsets=xyo, transOffset=ax3.transData)
+col = collections.RegularPolyCollection(7,
+                                        sizes = np.fabs(xx)*10.0, offsets=xyo,
+                                        transOffset=ax3.transData)
 trans = transforms.Affine2D().scale(fig.dpi/72.0)
 col.set_transform(trans)  # the points to pixels transform
 ax3.add_collection(col, autolim=True)
@@ -104,4 +104,5 @@ ax4.set_ylabel('Depth (m)')
 # Reverse the y-axis so depth increases downward
 ax4.set_ylim(ax4.get_ylim()[::-1])
 
-plt.savefig('collections_demo.ipe', format='ipe')
+
+

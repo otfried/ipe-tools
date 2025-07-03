@@ -1,8 +1,7 @@
+
+
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import use
-use('module://backend_ipe')
-
 
 fig, ax1 = plt.subplots()
 t = np.arange(0.01, 10.0, 0.01)
@@ -22,5 +21,4 @@ ax2.set_ylabel('sin', color='r')
 for tl in ax2.get_yticklabels():
     tl.set_color('r')
 
-# plt.show()
-plt.savefig('two_scales.ipe')
+
