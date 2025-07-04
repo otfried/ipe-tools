@@ -53,7 +53,7 @@ class RendererIpe(RendererBase):
         self.writer = XMLWriterIpe(ipewriter)
 
         super().__init__()
-        rcParams['pgf.texsystem'] = "pdflatex"  # use smae latex as Ipe
+        rcParams["pgf.texsystem"] = "pdflatex"  # use same latex as Ipe
         self.__write_header()
         self.writer.start("page")
 
@@ -252,11 +252,5 @@ FigureManager = FigureManagerIpe
 
 def new_figure_manager(num, *args, **kwargs):
     FigureClass = kwargs.pop("FigureClass", Figure)
-    thisFig = FigureClass(*args, **kwargs)
-    return _new_figure_manager_given_figure(num, thisFig)
-
-
-def _new_figure_manager_given_figure(num, figure):
-    canvas = FigureCanvasIpe(figure)
-    manager = FigureManagerIpe(canvas, num)
-    return manager
+    fig = FigureClass(*args, **kwargs)
+    return FigureManagerIpe(FigureCanvasIpe(fig), num)

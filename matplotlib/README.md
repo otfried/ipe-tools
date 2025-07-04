@@ -7,6 +7,10 @@ and Otfried Cheong.
 
 You can create Ipe files directly from Matplotlib.
 
+
+Quick Usage
+-----------
+
 To use the backend, copy the file *backend_ipe.py* somewhere on your
 Python path. (The current directory will do.)
 
@@ -21,6 +25,11 @@ The Ipe backend allows you to save in Ipe format:
 
 ```python
   plt.savefig("my_plot.ipe", format="ipe")
+```
+
+or, simply
+```python
+  plt.savefig("my_plot.ipe")
 ```
 
 
@@ -39,7 +48,7 @@ Options
 -------
 
 Some plots need to measure the size of text to place labels correctly
-(see the *legend_demo* test for an example).  The Ipe backend can use
+(see the *tests/legend_demo.py* test for an example).  The Ipe backend can use
 a background Latex process to measure the dimensions of text as it
 will appear in the Ipe document.  By default this is not enabled, as
 most plots don't need it and it slows down the processing of the plot.
@@ -95,5 +104,5 @@ You can find it as follows:
 
 ```python
   import matplotlib
-  print matplotlib.__version__
+  print(matplotlib.__version__)
 ```
