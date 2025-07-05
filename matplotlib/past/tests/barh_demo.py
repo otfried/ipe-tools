@@ -1,14 +1,11 @@
+
 """
 Simple demo of a horizontal bar chart.
 """
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt; plt.rcdefaults()
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import use
 
-
-plt.rcdefaults()
-use('module://backend_ipe')
 
 # Example data
 people = ('Tom', 'Dick', 'Harry', 'Slim', 'Jim')
@@ -21,4 +18,4 @@ plt.yticks(y_pos, people)
 plt.xlabel('Performance')
 plt.title('How fast do you want to go today?')
 
-plt.savefig('barh_demo.ipe', format='ipe')
+
