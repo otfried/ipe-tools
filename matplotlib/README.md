@@ -3,7 +3,8 @@ matplotlib backend
 
 This is an Ipe backend for the [Matplotlib plotting
 library](http://matplotlib.org/) for Python, written by Soyeon Baek
-and Otfried Cheong.
+and Otfried Cheong.  A major rewrite/refactoring for matplotlib >= 3.6
+and Python 3 was done by @satemochi in 2025.
 
 You can create Ipe files directly from Matplotlib.
 
