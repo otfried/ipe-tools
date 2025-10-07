@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
     // open PDF file
     #if POPPLER_VERSION_AT_LEAST(22, 3, 0)
-      PDFDoc *doc = new PDFDoc(std::make_unique<GooString>(fileName), ownerPW, userPW);
+      PDFDoc *doc = new PDFDoc(std::make_unique<GooString>(fileName->c_str()), ownerPW, userPW);
     #else
       PDFDoc *doc = new PDFDoc(fileName, ownerPW, userPW);
       delete userPW;
@@ -136,10 +136,15 @@ int main(int argc, char *argv[])
   if (argc == 3) {
     xmlFileName = argv[2];
   } else {
-    const char *p = fileName->c_str() + fileName->getLength() - 4;
+    #if POPPLER_VERSION_AT_LEAST(25, 10, 0)
+      const size_t fileSize = fileName->size();
+    #else
+      const size_t fileSize = fileName->getLength();
+    #endif
+    const char *p = fileName->c_str() + fileSize - 4;
     if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")) {
         xmlFileName = std::string(fileName->c_str(),
-                                  fileName->getLength() - 4);
+                                  fileSize - 4);
     } else {
       xmlFileName = fileName->c_str();
     }
