@@ -24,6 +24,7 @@ from matplotlib.backend_bases import (
     FigureCanvasBase, FigureManagerBase, RendererBase)
 from matplotlib.backends.backend_pgf import LatexManager, _tex_escape
 from matplotlib.backends.backend_svg import XMLWriter
+from matplotlib.backends.backend_mixed import MixedModeRenderer
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.rcsetup import validate_bool, validate_string
@@ -261,10 +262,13 @@ class FigureCanvasIpe(FigureCanvasBase):
                 writer = getwriter("utf-8")(writer)
             self._print_ipe(filename, writer, **kwargs)
 
-    def _print_ipe(self, filename, ipewriter, **kwargs):
+    def _print_ipe(self, filename, ipewriter, bbox_inches_restore=None, **kwargs):
         dpi = self.figure.dpi
         self.figure.set_dpi(72.0)
-        renderer = RendererIpe(self.figure, ipewriter, image_dpi=dpi)
+        w, h = self.figure.get_figwidth(), self.figure.get_figheight()
+        renderer = MixedModeRenderer(self.figure, w, h, dpi,
+                                     RendererIpe(self.figure, ipewriter, image_dpi=dpi),
+                                     bbox_inches_restore=bbox_inches_restore)
         self.figure.draw(renderer)
         renderer.finalize()
 
