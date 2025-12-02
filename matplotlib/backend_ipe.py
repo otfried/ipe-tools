@@ -45,12 +45,13 @@ _negative_number = compile(r"^\u2212([0-9]+)(\.[0-9]*)?$")
 
 
 class RendererIpe(RendererBase):
-    def __init__(self, figure, ipewriter):
+    def __init__(self, figure, ipewriter, image_dpi):
         width, height = figure.get_size_inches()
         self.dpi = figure.dpi
         self.width = width * self.dpi
         self.height = height * self.dpi
         self.writer = XMLWriterIpe(ipewriter)
+        self.image_dpi = image_dpi # actual dpi at which we resterize stuff
 
         super().__init__()
         rcParams["pgf.texsystem"] = "pdflatex"  # use same latex as Ipe
@@ -130,6 +131,12 @@ class RendererIpe(RendererBase):
                 elem += (f"{c1x} {c1y} {c2x} {c2y} {px} {py} c\n")
         return elem
 
+    def option_scale_image(self):
+        return True
+
+    def get_image_magnification(self):
+        return self.image_dpi / 72.0
+
     def draw_image(self, gc, x, y, im, transform=None):
         h, w = im.shape[:2]
         if w == 0 or h == 0:
@@ -142,6 +149,12 @@ class RendererIpe(RendererBase):
         if istransp:
             colorspace += "Alpha"
 
+        f = self.get_image_magnification()
+        if transform is None:
+            tr1, tr2, tr3, tr4, tr5, tr6 = w / f, 0, 0, h / f, 0, 0
+        else:
+            tr1, tr2, tr3, tr4, tr5, tr6 = transform.frozen().to_values()
+
         self._print_ipe_clip(gc)
         self.writer.start(
             "image",
@@ -149,19 +162,19 @@ class RendererIpe(RendererBase):
             height=f"{h}",
             ColorSpace=colorspace,
             BitsPerComponent="8",
-            matrix=f"1 0 0 -1 {x} {y}",
-            rect=f"0 -{h} {w} 0",
+            matrix=r"%f %f %f %f %f %f"%(tr1, tr2, tr3, tr4, tr5 + x, tr6 + y),
+            rect="0 1 1 0",
             length=f"{w * h * (1 if isgray else 3)}",
             alphaLength=f"{w * h if istransp else 0}",
         )
-        for row in im:
+        for row in im[::-1]:
             for r, g, b, a in row:
                 if isgray:
                     self.writer.data(f"{r:02x}")
                 else:
                     self.writer.data(f"{r:02x}{g:02x}{b:02x}")
         if istransp:
-            for row in im:
+            for row in im[::-1]:
                 for r, g, b, a in row:
                     self.writer.data(f"{a:02x}")
         self.writer.end()
@@ -249,8 +262,9 @@ class FigureCanvasIpe(FigureCanvasBase):
             self._print_ipe(filename, writer, **kwargs)
 
     def _print_ipe(self, filename, ipewriter, **kwargs):
+        dpi = self.figure.dpi
         self.figure.set_dpi(72.0)
-        renderer = RendererIpe(self.figure, ipewriter)
+        renderer = RendererIpe(self.figure, ipewriter, image_dpi=dpi)
         self.figure.draw(renderer)
         renderer.finalize()
 
