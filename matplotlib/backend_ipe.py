@@ -134,19 +134,36 @@ class RendererIpe(RendererBase):
         h, w = im.shape[:2]
         if w == 0 or h == 0:
             return
+
+        isgray = (im[..., :3] == im[..., 0, None]).all()
+        istransp = (im[..., 3] < 255).any()
+
+        colorspace = "DeviceGray" if isgray else "DeviceRGB"
+        if istransp:
+            colorspace += "Alpha"
+
         self._print_ipe_clip(gc)
         self.writer.start(
             "image",
             width=f"{w}",
             height=f"{h}",
-            ColorSpace="DeviceRGB",
+            ColorSpace=colorspace,
             BitsPerComponent="8",
             matrix=f"1 0 0 -1 {x} {y}",
-            rect=f"0 -{h} {w} 0"
+            rect=f"0 -{h} {w} 0",
+            length=f"{w * h * (1 if isgray else 3)}",
+            alphaLength=f"{w * h if istransp else 0}",
         )
         for row in im:
             for r, g, b, a in row:
-                self.writer.data(f"{r:02x}{g:02x}{b:02x}")
+                if isgray:
+                    self.writer.data(f"{r:02x}")
+                else:
+                    self.writer.data(f"{r:02x}{g:02x}{b:02x}")
+        if istransp:
+            for row in im:
+                for r, g, b, a in row:
+                    self.writer.data(f"{a:02x}")
         self.writer.end()
         self._print_ipe_clip_end()
 
