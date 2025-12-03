@@ -146,6 +146,12 @@ class RendererIpe(RendererBase):
         isgray = (im[..., :3] == im[..., 0, None]).all()
         istransp = (im[..., 3] < 255).any()
 
+        # attempt to squash dimensions of the image
+        # maybe shouldn't be done?
+        # (allows to reduce colorbars to 1 row or column of pixels)
+        isvertical = (im[:, [0], :] == im).all()
+        ishorizontal = (im[[0], :, :] == im).all()
+
         colorspace = "DeviceGray" if isgray else "DeviceRGB"
         if istransp:
             colorspace += "Alpha"
@@ -155,6 +161,13 @@ class RendererIpe(RendererBase):
             tr1, tr2, tr3, tr4, tr5, tr6 = w / f, 0, 0, h / f, 0, 0
         else:
             tr1, tr2, tr3, tr4, tr5, tr6 = transform.frozen().to_values()
+
+        if isvertical:
+            w = 1
+            im = im[:, [0], :]
+        if ishorizontal:
+            h = 1
+            im = im[[0], :, :]
 
         self._print_ipe_clip(gc)
         self.writer.start(
