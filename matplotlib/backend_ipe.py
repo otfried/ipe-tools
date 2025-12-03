@@ -195,13 +195,17 @@ class RendererIpe(RendererBase):
         self._print_ipe_clip_end()
 
     def draw_text(self, gc, x, y, s, prop, angle, ismath=False, mtext=None):
+        amap = { # matplotlib -> ipe alignment correspondences, add as needed
+                'center_baseline': 'center',
+               }
         if _negative_number.match(s):
             s = f"${s.replace('\u2212', '-')}$"
         attrib = {}
         if mtext:
             x, y = mtext.get_transform().transform_point(mtext.get_position())
-            attrib["halign"] = mtext.get_ha()
-            attrib["valign"] = mtext.get_va()
+            ha, va = mtext.get_ha(), mtext.get_va()
+            attrib["halign"] = amap[ha] if ha in amap.keys() else ha
+            attrib["valign"] = amap[va] if va in amap.keys() else va
 
         if angle != 0.0:
             ra = radians(angle)
