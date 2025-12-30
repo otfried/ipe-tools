@@ -44,7 +44,7 @@ typedef struct _IpeColor {
 #define IPE_BOLD    2
 #define IPE_MATH    3
 
-typedef int bool;
+typedef int BOOL;
 typedef struct { double x, y; } vertex;
 typedef struct { double xmin, xmax, ymin, ymax; } bbox;
 
@@ -62,13 +62,13 @@ typedef struct _IpeEnvironment {
   short marktype;               /* type of mark (1 .. 5)           */
   short font;                   /* font of text object             */
   double fontsize;               /* fontsize                        */
-  bool  axisset;                /* is an axis system defined ?     */
+  BOOL  axisset;                /* is an axis system defined ?     */
   vertex origin;                /* if so, this is the origin       */
   double axisdir;                /*    and this the base direction  */
 } IpeEnvironment;
 
 typedef struct _Line {		/* also used for splines	   */
-  bool closed;		        /* true if closed curve (polygon)  */
+  BOOL closed;		        /* true if closed curve (polygon)  */
   short arrow;			/* two bits for two arrows         */
   double arsize;                 /* size of arrows                  */
   int n;                        /* number of vertices              */
@@ -80,7 +80,7 @@ typedef struct _Line {		/* also used for splines	   */
 typedef struct _Circle {
   vertex center;                /* center of circle                */
   double radius;                 /* radius of circle                */
-  bool  ellipse;                /* is object an ellipse ?          */
+  BOOL  ellipse;                /* is object an ellipse ?          */
   double tfm[4];                 /* tfm values from file            */
 } Circle;
 
@@ -103,7 +103,7 @@ typedef struct _Text {
   short font;                   /* font                            */
   double fontsize;               /* LaTeX fontsize                  */
   vertex pos;                   /* position of text                */
-  bool minipage;                /* true if text is minipage        */
+  BOOL minipage;                /* true if text is minipage        */
   vertex ll, ur;                /* ll and ur vertex of bounding box*/
 } Text;
 
@@ -111,7 +111,7 @@ typedef struct _Bitmap {
   vertex ll, ur;      		/* lower left, upper right corner  */
   short width, height;          /* no of bits in bitmap            */
   unsigned long *words;         /* pointer to width*height pixels  */
-  bool in_color;                /* color bitmap ?                  */
+  BOOL in_color;                /* color bitmap ?                  */
 } Bitmap;
 
 typedef struct _IpeObject {
@@ -181,7 +181,7 @@ static FILE *fh;
 static char linebuf[MAX_LINE_LENGTH];
 static int grouplevel = 0;
 static int firstpage = 0;
-static bool in_settings = TRUE;
+static BOOL in_settings = TRUE;
 
 /******************** reading ******************************************/
 
@@ -237,9 +237,9 @@ static char *read_next(void)
 /* temporary storage for read_env and read_entry */
 
 static struct {
-  bool closed;
+  BOOL closed;
   vertex xy;
-  bool minipage;
+  BOOL minipage;
   double wd, ht, dp;
   double radius;
   double begangle, endangle;
@@ -247,11 +247,11 @@ static struct {
   int n;
   vertex *v;
   char *vtype;
-  bool ellipse;
+  BOOL ellipse;
   double tfm[4];
   unsigned long *words;
   int xbits, ybits;
-  bool bmcolor;
+  BOOL bmcolor;
 } rd;
 
 static void read_env(IpeEnvironment *ienv)
