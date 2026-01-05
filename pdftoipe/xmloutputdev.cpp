@@ -345,6 +345,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   GfxRGB rgb;
   int x, y;
   int c;
+  GfxColorSpaceMode colormode = colorMap->getColorSpace()->getMode();
 
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
 
@@ -390,7 +391,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     }
     str->close();
 #endif
-  } else if (colorMap->getNumPixelComps() == 1) {
+  } else if (colormode == csDeviceGray || colormode == csCalGray) {
     // write as gray level image
     writePS(" ColorSpace=\"DeviceGray\"");
     writePS(" BitsPerComponent=\"8\"");
