@@ -350,9 +350,8 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
 
   const double *mat = state->getCTM();
-  double tx = mat[0] + mat[2] + mat[4];
-  double ty = mat[1] + mat[3] + mat[5];
-  writePSFmt(" rect=\"%g %g %g %g\"", mat[4], mat[5], tx, ty);
+  writePSFmt(" rect=\"0 1 1 0\" matrix=\"%g %g %g %g %g %g\"",
+      mat[0], mat[1], mat[2], mat[3], mat[4], mat[5]);
   
   if (str->getKind() == strDCT && !inlineImg &&
       3 <= colorMap->getNumPixelComps() && colorMap->getNumPixelComps() <= 4) {
