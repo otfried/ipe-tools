@@ -24,6 +24,7 @@ from matplotlib.backend_bases import (
     FigureCanvasBase, FigureManagerBase, RendererBase)
 from matplotlib.backends.backend_pgf import LatexManager, _tex_escape
 from matplotlib.backends.backend_svg import XMLWriter
+from matplotlib.backends.backend_mixed import MixedModeRenderer
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.rcsetup import validate_bool, validate_string
@@ -45,12 +46,13 @@ _negative_number = compile(r"^\u2212([0-9]+)(\.[0-9]*)?$")
 
 
 class RendererIpe(RendererBase):
-    def __init__(self, figure, ipewriter):
+    def __init__(self, figure, ipewriter, image_dpi):
         width, height = figure.get_size_inches()
         self.dpi = figure.dpi
         self.width = width * self.dpi
         self.height = height * self.dpi
         self.writer = XMLWriterIpe(ipewriter)
+        self.image_dpi = image_dpi # actual dpi at which we resterize stuff
 
         super().__init__()
         rcParams["pgf.texsystem"] = "pdflatex"  # use same latex as Ipe
@@ -130,34 +132,80 @@ class RendererIpe(RendererBase):
                 elem += (f"{c1x} {c1y} {c2x} {c2y} {px} {py} c\n")
         return elem
 
+    def option_scale_image(self):
+        return True
+
+    def get_image_magnification(self):
+        return self.image_dpi / 72.0
+
     def draw_image(self, gc, x, y, im, transform=None):
         h, w = im.shape[:2]
         if w == 0 or h == 0:
             return
+
+        isgray = (im[..., :3] == im[..., 0, None]).all()
+        istransp = (im[..., 3] < 255).any()
+
+        # attempt to squash dimensions of the image
+        # maybe shouldn't be done?
+        # (allows to reduce colorbars to 1 row or column of pixels)
+        isvertical = (im[:, [0], :] == im).all()
+        ishorizontal = (im[[0], :, :] == im).all()
+
+        colorspace = "DeviceGray" if isgray else "DeviceRGB"
+        if istransp:
+            colorspace += "Alpha"
+
+        f = self.get_image_magnification()
+        if transform is None:
+            tr1, tr2, tr3, tr4, tr5, tr6 = w / f, 0, 0, h / f, 0, 0
+        else:
+            tr1, tr2, tr3, tr4, tr5, tr6 = transform.frozen().to_values()
+
+        if isvertical:
+            w = 1
+            im = im[:, [0], :]
+        if ishorizontal:
+            h = 1
+            im = im[[0], :, :]
+
         self._print_ipe_clip(gc)
         self.writer.start(
             "image",
             width=f"{w}",
             height=f"{h}",
-            ColorSpace="DeviceRGB",
+            ColorSpace=colorspace,
             BitsPerComponent="8",
-            matrix=f"1 0 0 -1 {x} {y}",
-            rect=f"0 -{h} {w} 0"
+            matrix=r"%f %f %f %f %f %f"%(tr1, tr2, tr3, tr4, tr5 + x, tr6 + y),
+            rect="0 1 1 0",
+            length=f"{w * h * (1 if isgray else 3)}",
+            alphaLength=f"{w * h if istransp else 0}",
         )
-        for row in im:
+        for row in im[::-1]:
             for r, g, b, a in row:
-                self.writer.data(f"{r:02x}{g:02x}{b:02x}")
+                if isgray:
+                    self.writer.data(f"{r:02x}")
+                else:
+                    self.writer.data(f"{r:02x}{g:02x}{b:02x}")
+        if istransp:
+            for row in im[::-1]:
+                for r, g, b, a in row:
+                    self.writer.data(f"{a:02x}")
         self.writer.end()
         self._print_ipe_clip_end()
 
     def draw_text(self, gc, x, y, s, prop, angle, ismath=False, mtext=None):
+        amap = { # matplotlib -> ipe alignment correspondences, add as needed
+                'center_baseline': 'center',
+               }
         if _negative_number.match(s):
             s = f"${s.replace('\u2212', '-')}$"
         attrib = {}
         if mtext:
             x, y = mtext.get_transform().transform_point(mtext.get_position())
-            attrib["halign"] = mtext.get_ha()
-            attrib["valign"] = mtext.get_va()
+            ha, va = mtext.get_ha(), mtext.get_va()
+            attrib["halign"] = amap[ha] if ha in amap.keys() else ha
+            attrib["valign"] = amap[va] if va in amap.keys() else va
 
         if angle != 0.0:
             ra = radians(angle)
@@ -231,9 +279,13 @@ class FigureCanvasIpe(FigureCanvasBase):
                 writer = getwriter("utf-8")(writer)
             self._print_ipe(filename, writer, **kwargs)
 
-    def _print_ipe(self, filename, ipewriter, **kwargs):
+    def _print_ipe(self, filename, ipewriter, bbox_inches_restore=None, **kwargs):
+        dpi = self.figure.dpi
         self.figure.set_dpi(72.0)
-        renderer = RendererIpe(self.figure, ipewriter)
+        w, h = self.figure.get_figwidth(), self.figure.get_figheight()
+        renderer = MixedModeRenderer(self.figure, w, h, dpi,
+                                     RendererIpe(self.figure, ipewriter, image_dpi=dpi),
+                                     bbox_inches_restore=bbox_inches_restore)
         self.figure.draw(renderer)
         renderer.finalize()
 
