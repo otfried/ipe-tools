@@ -359,7 +359,11 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     std::vector<char> buffer;
     // initialize stream
     str = str->getNextStream();
+  #if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    str->rewind();
+  #else
     str->reset();
+  #endif
     // copy the stream
     while ((c = str->getChar()) != EOF)
       buffer.push_back(char(c));
@@ -382,7 +386,11 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     // 1 bit depth -- not implemented in Ipe
 
     // initialize stream
+  #if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    str->rewind();
+  #else
     str->reset();
+  #endif
     // copy the stream
     size = height * ((width + 7) / 8);
     for (i = 0; i < size; ++i) {
@@ -399,7 +407,11 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     // initialize stream
     imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(),
 			     colorMap->getBits());
+  #if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    imgStr->rewind();
+  #else
     imgStr->reset();
+  #endif
     
     // for each line...
     for (y = 0; y < height; ++y) {
@@ -424,7 +436,11 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     // initialize stream
     imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(),
 			     colorMap->getBits());
+  #if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    imgStr->rewind();
+  #else
     imgStr->reset();
+  #endif
     
     // for each line...
     for (y = 0; y < height; ++y) {
