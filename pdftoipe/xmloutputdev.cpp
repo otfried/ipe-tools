@@ -345,13 +345,13 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   GfxRGB rgb;
   int x, y;
   int c;
+  GfxColorSpaceMode colormode = colorMap->getColorSpace()->getMode();
 
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
 
   const double *mat = state->getCTM();
-  double tx = mat[0] + mat[2] + mat[4];
-  double ty = mat[1] + mat[3] + mat[5];
-  writePSFmt(" rect=\"%g %g %g %g\"", mat[4], mat[5], tx, ty);
+  writePSFmt(" rect=\"0 1 1 0\" matrix=\"%g %g %g %g %g %g\"",
+      mat[0], mat[1], mat[2], mat[3], mat[4], mat[5]);
   
   if (str->getKind() == strDCT && !inlineImg &&
       3 <= colorMap->getNumPixelComps() && colorMap->getNumPixelComps() <= 4) {
@@ -398,7 +398,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     }
     str->close();
 #endif
-  } else if (colorMap->getNumPixelComps() == 1) {
+  } else if (colormode == csDeviceGray || colormode == csCalGray) {
     // write as gray level image
     writePS(" ColorSpace=\"DeviceGray\"");
     writePS(" BitsPerComponent=\"8\"");
