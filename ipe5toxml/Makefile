@@ -9,6 +9,7 @@ else
 TARGET = ipe5toxml
 endif
 
+CFLAGS = -std=c2x
 LIBS = -lm
 
 all: $(TARGET)

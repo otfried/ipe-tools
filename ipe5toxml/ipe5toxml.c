@@ -44,7 +44,6 @@ typedef struct _IpeColor {
 #define IPE_BOLD    2
 #define IPE_MATH    3
 
-typedef int bool;
 typedef struct { double x, y; } vertex;
 typedef struct { double xmin, xmax, ymin, ymax; } bbox;
 
