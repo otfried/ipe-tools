@@ -290,21 +290,28 @@ void XmlOutputDev::startText(GfxState *state, double x, double y)
   double xt, yt;
   state->transform(x, y, &xt, &yt);
 
-  const double *T = state->getTextMat();
-  const double *C = state->getCTM();
+#if POPPLER_VERSION_AT_LEAST(26, 2, 0)
+  const auto &T = state->getTextMat();
+  const auto &C = state->getCTM();
+  const double *Tp = T.data();
+  const double *Cp = C.data();
+#else
+  const double *Tp = state->getTextMat();
+  const double *Cp = state->getCTM();
+#endif
 
   /*
   fprintf(stderr, "TextMatrix = %g %g %g %g %g %g\n", 
-	  T[0], T[1], T[2], T[3], T[4], T[5]);
+	  Tp[0], Tp[1], Tp[2], Tp[3], Tp[4], Tp[5]);
   fprintf(stderr, "CTM = %g %g %g %g %g %g\n", 
-	  C[0], C[1], C[2], C[3], C[4], C[5]);
+	  Cp[0], Cp[1], Cp[2], Cp[3], Cp[4], Cp[5]);
   */
 
   double M[4];
-  M[0] = C[0] * T[0] + C[2] * T[1];
-  M[1] = C[1] * T[0] + C[3] * T[1];
-  M[2] = C[0] * T[2] + C[2] * T[3];
-  M[3] = C[1] * T[2] + C[3] * T[3];
+  M[0] = Cp[0] * Tp[0] + Cp[2] * Tp[1];
+  M[1] = Cp[1] * Tp[0] + Cp[3] * Tp[1];
+  M[2] = Cp[0] * Tp[2] + Cp[2] * Tp[3];
+  M[3] = Cp[1] * Tp[2] + Cp[3] * Tp[3];
 
   GfxRGB rgb;
   state->getFillRGB(&rgb);
@@ -349,7 +356,12 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
 
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
 
+#if POPPLER_VERSION_AT_LEAST(26, 2, 0)
+  const auto &matArr = state->getCTM();
+  const double *mat = matArr.data();
+#else
   const double *mat = state->getCTM();
+#endif
   writePSFmt(" rect=\"0 1 1 0\" matrix=\"%g %g %g %g %g %g\"",
       mat[0], mat[1], mat[2], mat[3], mat[4], mat[5]);
   
