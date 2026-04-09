@@ -6,30 +6,29 @@
 #ifndef XMLOUTPUTDEV_H
 #define XMLOUTPUTDEV_H
 
-#include <stddef.h>
+#include "GfxState.h"
 #include "Object.h"
 #include "OutputDev.h"
-#include "GfxState.h"
 #include "cpp/poppler-version.h"
+#include <stddef.h>
 
 class GfxPath;
 class GfxFont;
 
 #define PDFTOIPE_VERSION "2024/11/15"
 
-#define POPPLER_VERSION_AT_LEAST(major, minor, micro) \
-  ((POPPLER_VERSION_MAJOR > (major)) || \
-  (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR > (minor)) || \
-  (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR == (minor) && POPPLER_VERSION_MICRO >= (micro)))
+#define POPPLER_VERSION_AT_LEAST(major, minor, micro)                          \
+  ((POPPLER_VERSION_MAJOR > (major)) ||                                        \
+   (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR > (minor)) ||    \
+   (POPPLER_VERSION_MAJOR == (major) && POPPLER_VERSION_MINOR == (minor) &&    \
+    POPPLER_VERSION_MICRO >= (micro)))
 
-class XmlOutputDev : public OutputDev
-{
+class XmlOutputDev : public OutputDev {
 public:
-
   // Open an XML output file, and write the prolog.
-  XmlOutputDev(const std::string& fileName, XRef *xrefA, Catalog *catalog,
+  XmlOutputDev(const std::string &fileName, XRef *xrefA, Catalog *catalog,
                int firstPage, int lastPage);
-  
+
   // Destructor -- writes the trailer and closes the file.
   virtual ~XmlOutputDev();
 
@@ -38,9 +37,9 @@ public:
 
   bool hasUnicode() const { return iUnicode; }
 
-  void setTextHandling(bool math, bool notext, bool literal,
-                       int mergeLevel, bool noTextSize, int unicodeLevel);
-  
+  void setTextHandling(bool math, bool notext, bool literal, int mergeLevel,
+                       bool noTextSize, int unicodeLevel);
+
   //---- get info about output device
 
   // Does this device use upside-down coordinates?
@@ -72,30 +71,30 @@ public:
   virtual void eoFill(GfxState *state) override;
 
   //----- text drawing
-  virtual void drawChar(GfxState *state, double x, double y,
-			double dx, double dy,
-			double originX, double originY,
-			CharCode code, int nBytes, const Unicode *u, int uLen) override;
+  virtual void drawChar(GfxState *state, double x, double y, double dx,
+                        double dy, double originX, double originY,
+                        CharCode code, int nBytes, const Unicode *u,
+                        int uLen) override;
 
   //----- image drawing
-  virtual void drawImage(GfxState *state, Object *ref, Stream *str,
-			 int width, int height, GfxImageColorMap *colorMap,
-			 bool interpolate, const int *maskColors, bool inlineImg) override;
+  virtual void drawImage(GfxState *state, Object *ref, Stream *str, int width,
+                         int height, GfxImageColorMap *colorMap,
+                         bool interpolate, const int *maskColors,
+                         bool inlineImg) override;
   virtual void drawSoftMaskedImage(GfxState *state, Object *ref, Stream *str,
-			 int width, int height,
-			 GfxImageColorMap *colorMap, bool interpolate,
-			 Stream *maskStr, int maskWidth,
-			 int maskHeight,
-			 GfxImageColorMap *maskColorMap,
-			 bool maskInterpolate) override;
-
+                                   int width, int height,
+                                   GfxImageColorMap *colorMap, bool interpolate,
+                                   Stream *maskStr, int maskWidth,
+                                   int maskHeight,
+                                   GfxImageColorMap *maskColorMap,
+                                   bool maskInterpolate) override;
 
 protected:
   void startDrawingPath();
   void startText(GfxState *state, double x, double y);
   void finishText();
   void writePSUnicode(int ch);
-  
+
   void doPath(GfxState *state);
   void writePSChar(int code);
   void writePS(const char *s);
@@ -104,18 +103,18 @@ protected:
 
 protected:
   FILE *outputStream;
-  int seqPage;			// current sequential page number
-  XRef *xref;			// the xref table for this PDF file
-  bool ok;			    // set up ok?
-  bool iUnicode;                // has a Unicode character been used?
+  int seqPage;   // current sequential page number
+  XRef *xref;    // the xref table for this PDF file
+  bool ok;       // set up ok?
+  bool iUnicode; // has a Unicode character been used?
 
-  bool iIsLiteral;              // take latex in text literally
-  bool iIsMath;                 // make text objects math formulas
-  bool iNoText;                 // discard text objects
-  bool inText;                  // inside a text object
-  bool iNoTextSize;             // all text objects at normal size
-  int  iMergeLevel;             // text merge level
-  int iUnicodeLevel;            // unicode handling
+  bool iIsLiteral;   // take latex in text literally
+  bool iIsMath;      // make text objects math formulas
+  bool iNoText;      // discard text objects
+  bool inText;       // inside a text object
+  bool iNoTextSize;  // all text objects at normal size
+  int iMergeLevel;   // text merge level
+  int iUnicodeLevel; // unicode handling
 };
 
 // --------------------------------------------------------------------
