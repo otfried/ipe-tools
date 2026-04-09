@@ -81,6 +81,14 @@ public:
   virtual void drawImage(GfxState *state, Object *ref, Stream *str,
 			 int width, int height, GfxImageColorMap *colorMap,
 			 bool interpolate, const int *maskColors, bool inlineImg) override;
+  virtual void drawSoftMaskedImage(GfxState *state, Object *ref, Stream *str,
+			 int width, int height,
+			 GfxImageColorMap *colorMap, bool interpolate,
+			 Stream *maskStr, int maskWidth,
+			 int maskHeight,
+			 GfxImageColorMap *maskColorMap,
+			 bool maskInterpolate) override;
+
 
 protected:
   void startDrawingPath();

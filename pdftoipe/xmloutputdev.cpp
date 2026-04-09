@@ -471,6 +471,126 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   writePS("\n</image>\n");
 }
 
+void XmlOutputDev::drawSoftMaskedImage(
+    GfxState *state, Object *ref,
+    Stream *str, int width, int height,
+    GfxImageColorMap *colorMap,
+    bool interpolate, Stream *maskStr,
+    int maskWidth, int maskHeight,
+    GfxImageColorMap *maskColorMap,
+    bool maskInterpolate)
+{
+  finishText();
+
+  ImageStream *imgStr;
+  const double *mat = state->getCTM();
+
+  writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
+  writePSFmt(" rect=\"0 1 1 0\" matrix=\"%g %g %g %g %g %g\"",
+             mat[0], mat[1], mat[2], mat[3], mat[4], mat[5]);
+
+  bool maskOpaque = true;
+  imgStr = new ImageStream(maskStr, maskWidth, maskColorMap->getNumPixelComps(), maskColorMap->getBits());
+  imgStr->reset();
+
+  for (int y = 0; y < maskHeight; ++y) {
+    unsigned char *p = imgStr->getLine();
+    for (int x = 0; x < maskWidth; ++x) {
+      GfxGray gray;
+      maskColorMap->getGray(p, &gray);
+      if (colToByte(gray) != 255) {
+        maskOpaque = false;
+        goto escapeMask;
+      }
+      p += maskColorMap->getNumPixelComps();
+    }
+  }
+escapeMask:
+
+  bool grayImage = true;
+  imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(), colorMap->getBits());
+  imgStr->reset();
+
+  for (int y = 0; y < height; ++y) {
+    unsigned char *p = imgStr->getLine();
+    for (int x = 0; x < width; ++x) {
+      GfxRGB rgb;
+      colorMap->getRGB(p, &rgb);
+      if (!(rgb.r == rgb.g && rgb.g == rgb.b)) {
+        grayImage = false;
+        goto escapeGray;
+      }
+      p += colorMap->getNumPixelComps();
+    }
+  }
+escapeGray:
+
+  // no mask for gray
+  if (grayImage) {
+    writePS(" ColorSpace=\"DeviceGray\"");
+    writePS(" BitsPerComponent=\"8\"");
+    writePS(">\n");
+
+    imgStr->reset();
+
+    for (int y = 0; y < height; ++y) {
+      unsigned char *p = imgStr->getLine();
+      for (int x = 0; x < width; ++x) {
+        GfxGray gray;
+        colorMap->getGray(p, &gray);
+        writePSFmt("%02x", colToByte(gray));
+        p += colorMap->getNumPixelComps();
+      }
+    }
+
+    writePS("\n</image>\n");
+    return;
+  }
+
+  // RGB
+  writePS(" ColorSpace=\"DeviceRGBAlpha\"");
+  writePS(" BitsPerComponent=\"8\"");
+  writePSFmt(" length=\"%d\"", width * height * 3);
+  writePSFmt(" alphaLength=\"%d\"", maskWidth * maskHeight);
+  writePS(">\n");
+
+  // RGB data
+  {
+    imgStr->reset();
+
+    for (int y = 0; y < height; ++y) {
+      unsigned char *p = imgStr->getLine();
+      for (int x = 0; x < width; ++x) {
+        GfxRGB rgb;
+        colorMap->getRGB(p, &rgb);
+        writePSFmt("%02x%02x%02x",
+                   colToByte(rgb.r),
+                   colToByte(rgb.g),
+                   colToByte(rgb.b));
+        p += colorMap->getNumPixelComps();
+      }
+    }
+  }
+
+  // Alpha mask
+  {
+    imgStr = new ImageStream(maskStr, maskWidth, maskColorMap->getNumPixelComps(), maskColorMap->getBits());
+    imgStr->reset();
+
+    for (int y = 0; y < maskHeight; ++y) {
+      unsigned char *p = imgStr->getLine();
+      for (int x = 0; x < maskWidth; ++x) {
+        GfxGray gray;
+        maskColorMap->getGray(p, &gray);
+        writePSFmt("%02x", colToByte(gray));
+        p += maskColorMap->getNumPixelComps();
+      }
+    }
+  }
+
+  writePS("\n</image>\n");
+}
+
 // --------------------------------------------------------------------
 
 struct UnicodeToLatex {
