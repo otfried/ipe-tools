@@ -401,7 +401,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(),
                              colorMap->getBits());
 #if POPPLER_VERSION_AT_LEAST(26, 1, 0)
-    imgStr->rewind();
+    (void)imgStr->rewind();
 #else
     imgStr->reset();
 #endif
@@ -430,7 +430,7 @@ void XmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(),
                              colorMap->getBits());
 #if POPPLER_VERSION_AT_LEAST(26, 1, 0)
-    imgStr->rewind();
+    (void)imgStr->rewind();
 #else
     imgStr->reset();
 #endif
@@ -462,7 +462,12 @@ void XmlOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref,
   finishText();
 
   ImageStream *imgStr;
+#if POPPLER_VERSION_AT_LEAST(26, 2, 0)
+  const double *mat = state->getCTM().data();
+#else
   const double *mat = state->getCTM();
+#endif
+
 
   writePSFmt("<image width=\"%d\" height=\"%d\"", width, height);
   writePSFmt(" rect=\"0 1 1 0\" matrix=\"%g %g %g %g %g %g\"", mat[0], mat[1],
@@ -471,7 +476,11 @@ void XmlOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref,
   bool maskOpaque = true;
   imgStr = new ImageStream(maskStr, maskWidth, maskColorMap->getNumPixelComps(),
                            maskColorMap->getBits());
-  imgStr->reset();
+#if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    (void)imgStr->rewind();
+#else
+    imgStr->reset();
+#endif
 
   for (int y = 0; y < maskHeight; ++y) {
     unsigned char *p = imgStr->getLine();
@@ -490,7 +499,11 @@ escapeMask:
   bool grayImage = true;
   imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(),
                            colorMap->getBits());
-  imgStr->reset();
+#if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    (void)imgStr->rewind();
+#else
+    imgStr->reset();
+#endif
 
   for (int y = 0; y < height; ++y) {
     unsigned char *p = imgStr->getLine();
@@ -512,7 +525,11 @@ escapeGray:
     writePS(" BitsPerComponent=\"8\"");
     writePS(">\n");
 
+#if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    (void)imgStr->rewind();
+#else
     imgStr->reset();
+#endif
 
     for (int y = 0; y < height; ++y) {
       unsigned char *p = imgStr->getLine();
@@ -537,7 +554,11 @@ escapeGray:
 
   // RGB data
   {
+#if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    (void)imgStr->rewind();
+#else
     imgStr->reset();
+#endif
 
     for (int y = 0; y < height; ++y) {
       unsigned char *p = imgStr->getLine();
@@ -556,7 +577,11 @@ escapeGray:
     imgStr =
         new ImageStream(maskStr, maskWidth, maskColorMap->getNumPixelComps(),
                         maskColorMap->getBits());
+#if POPPLER_VERSION_AT_LEAST(26, 1, 0)
+    (void)imgStr->rewind();
+#else
     imgStr->reset();
+#endif
 
     for (int y = 0; y < maskHeight; ++y) {
       unsigned char *p = imgStr->getLine();
