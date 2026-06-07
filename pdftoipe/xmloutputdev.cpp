@@ -64,8 +64,13 @@ XmlOutputDev::XmlOutputDev(const std::string &fileName, XRef *xrefA,
   }
   */
 
+#if POPPLER_VERSION_AT_LEAST(26, 6, 0)
+  const PDFRectangle *media = &page->getMediaBox();
+  const PDFRectangle *crop = &page->getCropBox();
+#else
   const PDFRectangle *media = page->getMediaBox();
   const PDFRectangle *crop = page->getCropBox();
+#endif
 
   fprintf(stderr, "MediaBox: %g %g %g %g (%g x %g)\n", media->x1, media->x2,
           media->y1, media->y2, wid, ht);
