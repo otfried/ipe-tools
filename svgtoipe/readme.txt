@@ -33,16 +33,13 @@ more likely to get involved in a discussion of desirable features on
 the mailing list, where anyone interested can participate than by
 direct Email.
 
-	Otfried Cheong
-	Dept. of Computer Science
-	KAIST
-	Daejeon, South Korea
-	Email: ipe@otfried.org
-	Ipe webpage: http://ipe.otfried.org
+Otfried Cheong <ipe@otfried.org>
+
+Ipe webpage: http://ipe.otfried.org
 
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2024 Otfried Cheong
+Copyright (C) 2009-2026 Otfried Cheong
 
 svgtoipe is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -63,6 +60,13 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 Changes
 =======
+
+ * 2026/10/10
+   Make code pass "ruff check" and no more warnings on Python 3.14.
+   Support transparency in images.
+   Parse title and description from SVG.
+   Implement parsing <use> that does not refer to <defs>.
+   Improved cleaning of paths that are invalid in Ipe.
 
  * 2024/05/16
    Fix warnings on regular expressions on Python 3.12 (#64).
