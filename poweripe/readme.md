@@ -1,5 +1,8 @@
 # Poweripe
 
+**This code is deprecated and no longer maintained. The functionality
+  to export to PPTX format is part of Ipe since Ipe 7.3.1.**
+
 Do you prefer to create your presentations in Ipe?  But your
 bosses/colleagues/clients keep asking for Powerpoint files?
 
