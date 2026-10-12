@@ -14,8 +14,6 @@ import sys
 import urllib.request
 from urllib.parse import quote
 
-assert sys.hexversion >= 0x3000000, "Please run using Python 3"
-
 ignore = {"photos.svg", "videos.svg", "oscon.svg"}
 
 

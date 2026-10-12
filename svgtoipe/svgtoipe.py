@@ -22,10 +22,6 @@
 #
 # SVG Specification: https://www.w3.org/TR/SVG11
 #
-# TODO:
-#  - coordinates used in gradients (e.g. intertwingly.svg)
-#  - go through SVG test suite (see test_svg.py)
-#
 # --------------------------------------------------------------------
 
 svgtoipe_version = "20261010"
@@ -49,10 +45,9 @@ try:
 except ImportError:
     have_pil = False
 
-assert sys.hexversion >= 0x3000000, "Please run svgtoipe using Python 3"
-
 ignored_nodes = {
     "defs",
+    "clipPath",
     "audio",
     "video",
     "metadata",
@@ -106,6 +101,9 @@ attribute_names = [
     "stroke-miterlimit",
     "opacity",
     "font-size",
+    "font-weight",
+    "font-family",
+    "text-anchor",
     "visibility",
 ]
 
@@ -153,8 +151,35 @@ def parse_opacity(txt):
     return 10 * math.floor(10 * value + 0.5)
 
 
+def parse_stop_opacity(txt):
+    if not txt:
+        return 1.0
+    value = float(txt[:-1]) / 100.0 if txt.endswith("%") else float(txt)
+    return max(0.0, min(1.0, value))
+
+
+def parse_dash(dasharray, dashoffset):
+    """(lengths, offset) for stroke-dasharray, or None for solid or invalid dashes."""
+    values = [v for v in re.split(r"[\s,]+", (dasharray or "").strip()) if v]
+    if not values or values == ["none"]:
+        return None
+    try:
+        dashes = [parse_float(v) for v in values]
+        offset = parse_float(dashoffset) or 0.0
+    except ValueError:
+        return None
+    if len(dashes) % 2:
+        dashes *= 2  # an odd list is repeated, so that dashes and gaps alternate
+    if min(dashes) < 0 or sum(dashes) == 0:
+        return None
+    return dashes, offset
+
+
 def parse_list(string):
-    return re.findall(r"([A-Za-z]|-?[0-9]+\.?[0-9]*(?:e-?[0-9]*)?)", string)
+    # numbers may start with the decimal point, as in "scale(.5)"
+    return re.findall(
+        r"([A-Za-z]|-?(?:\.[0-9]+|[0-9]+\.?[0-9]*)(?:[eE][-+]?[0-9]+)?)", string
+    )
 
 
 def parse_style(string):
@@ -202,6 +227,15 @@ def parse_color(c):
         return (r, g, b)
     sys.stderr.write(f"Unknown color: {c}\n")
     return None
+
+
+# a gradient paint is written "url(#id) fallback" in SVG
+GRADIENT_PAINT = re.compile(r"\s*url\(\s*#([^)\s]+)\s*\)\s*(.*)$")
+
+
+def get_href(n):
+    """Link target of an element; SVG 2 allows href without the xlink prefix."""
+    return n.getAttribute("xlink:href") or n.getAttribute("href")
 
 
 def pnext(d, n):
@@ -252,6 +286,7 @@ def _parse_path(output, d):
     xs, ys = 0.0, 0.0
     x0, y0 = 0.0, 0.0
     pending_move = None
+    last_op = None
     while d:
         out = io.StringIO()
         if not d[0][0] in "01234567890.-":
@@ -307,8 +342,11 @@ def _parse_path(output, d):
                 y2 += y
                 xf += x
                 yf += y
-            x1 = x + (x - xs)
-            y1 = y + (y - ys)
+            if last_op in ("C", "c", "S", "s"):
+                x1 = x + (x - xs)
+                y1 = y + (y - ys)
+            else:
+                x1, y1 = x, y
             out.write(f"{x1:g} {y1:g} {x2:g} {y2:g} {xf:g} {yf:g} c\n")
             xs, ys = x2, y2
             x, y = xf, yf
@@ -327,8 +365,11 @@ def _parse_path(output, d):
             if opcode == "t":
                 xf += x
                 yf += y
-            x1 = x + (x - xs)
-            y1 = y + (y - ys)
+            if last_op in ("Q", "q", "T", "t"):
+                x1 = x + (x - xs)
+                y1 = y + (y - ys)
+            else:
+                x1, y1 = x, y
             out.write(f"{x1:g} {y1:g} {xf:g} {yf:g} q\n")
             xs, ys = x1, y1
             x, y = xf, yf
@@ -351,6 +392,7 @@ def _parse_path(output, d):
                 output.write(pending_move)
                 pending_move = None
             output.write(segment)
+        last_op = opcode
 
 
 def parse_transformation(txt):
@@ -374,9 +416,128 @@ def parse_transform(n):
     return None
 
 
+def viewport_length(txt):
+    # percentages and missing values mean no usable absolute size
+    if not txt or txt.endswith("%"):
+        return None
+    return parse_float(txt)
+
+
+def viewbox_matrix(viewbox, size, aspect):
+    """Matrix mapping viewBox user space to a viewport of the given size."""
+    x, y, w, h = viewbox
+    width, height = size
+    tokens = (aspect or "").split()
+    if tokens and tokens[0] == "defer":
+        tokens = tokens[1:]
+    align = tokens[0] if tokens else "xMidYMid"
+    sx, sy = width / w, height / h
+    tx = ty = 0.0
+    if align != "none":
+        sx = sy = max(sx, sy) if tokens[1:] == ["slice"] else min(sx, sy)
+        tx = (width - sx * w) * {"xMin": 0.0, "xMax": 1.0}.get(align[:4], 0.5)
+        ty = (height - sy * h) * {"YMin": 0.0, "YMax": 1.0}.get(align[4:], 0.5)
+    return Matrix([sx, 0, 0, sy, tx - sx * x, ty - sy * y])
+
+
+def bezier_points(p0, p1, p2, p3):
+    """Endpoints and axis-extreme points of a cubic Bezier segment."""
+    points = [p0, p3]
+    ts = []
+    for axis in (0, 1):
+        v0, v1, v2, v3 = p0[axis], p1[axis], p2[axis], p3[axis]
+        a = -v0 + 3 * v1 - 3 * v2 + v3
+        b = 2 * (v0 - 2 * v1 + v2)
+        c = v1 - v0
+        if abs(a) > 1e-12:
+            disc = b * b - 4 * a * c
+            if disc >= 0:
+                ts += [(-b + s * math.sqrt(disc)) / (2 * a) for s in (1, -1)]
+        elif abs(b) > 1e-12:
+            ts.append(-c / b)
+    for t in ts:
+        if 0 < t < 1:
+            u = 1 - t
+            points.append(
+                tuple(
+                    u**3 * p0[i]
+                    + 3 * u * u * t * p1[i]
+                    + 3 * u * t * t * p2[i]
+                    + t**3 * p3[i]
+                    for i in (0, 1)
+                )
+            )
+    return points
+
+
+def unit_circle_angle(matrix, p):
+    """Angle of point p on the unit circle that the matrix maps to the ellipse."""
+    a, b, c, d, e, f = matrix
+    px, py = p[0] - e, p[1] - f
+    det = a * d - b * c
+    return math.atan2((a * py - b * px) / det, (d * px - c * py) / det)
+
+
+def geometry_bbox(geometry):
+    """Exact bounding box (x0, y0, x1, y1) of Ipe path operators, or None."""
+    points = []
+    nums = []
+    cur = None
+    for token in geometry.split():
+        if not (len(token) == 1 and token.isalpha()):
+            nums.append(float(token))
+            continue
+        pts = list(zip(nums[0::2], nums[1::2]))
+        if token in ("m", "l"):
+            cur = pts[0]
+            points.append(cur)
+        elif token == "c":
+            points += bezier_points(cur, *pts)
+            cur = pts[-1]
+        elif token == "q":
+            q1, q2 = pts
+            points += bezier_points(
+                cur,
+                (cur[0] + 2 * (q1[0] - cur[0]) / 3, cur[1] + 2 * (q1[1] - cur[1]) / 3),
+                (q2[0] + 2 * (q1[0] - q2[0]) / 3, q2[1] + 2 * (q1[1] - q2[1]) / 3),
+                q2,
+            )
+            cur = q2
+        elif token == "e":
+            a, b, c, d, e, f = nums
+            hx, hy = math.hypot(a, c), math.hypot(b, d)
+            points += [(e - hx, f - hy), (e + hx, f + hy)]
+        elif token == "a":
+            a, b, c, d, e, f, x, y = nums
+            det = a * d - b * c
+            if det != 0:
+                start = unit_circle_angle(nums[:6], cur)
+                span = (unit_circle_angle(nums[:6], (x, y)) - start) % (2 * math.pi)
+                for t in (math.atan2(c, a), math.atan2(d, b)):
+                    for angle in (t, t + math.pi):
+                        if (angle - start) % (2 * math.pi) <= span:
+                            cos, sin = math.cos(angle), math.sin(angle)
+                            points.append(
+                                (a * cos + c * sin + e, b * cos + d * sin + f)
+                            )
+            cur = (x, y)
+            points.append(cur)
+        nums = []
+    if not points:
+        return None
+    xs, ys = zip(*points)
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
 # Convert from endpoint to center parameterization
 # www.w3.org/TR/2003/REC-SVG11-20030114/implnote.html#ArcImplementationNotes
 def draw_arc(out, x1, y1, rx, ry, phi, large_arc, sweep, x2, y2):
+    if x1 == x2 and y1 == y2:
+        return  # SVG omits the arc entirely
+    rx, ry = abs(rx), abs(ry)
+    if rx == 0 or ry == 0:
+        out.write(f"{x2:g} {y2:g} l\n")  # SVG treats it as a straight line
+        return
     phi = math.pi * phi / 180.0
     cp = math.cos(phi)
     sp = math.sin(phi)
@@ -384,6 +545,11 @@ def draw_arc(out, x1, y1, rx, ry, phi, large_arc, sweep, x2, y2):
     dy = 0.5 * (y1 - y2)
     x1p = cp * dx + sp * dy
     y1p = -sp * dx + cp * dy
+    # radii too small to reach the endpoint are scaled up (SVG F.6.6)
+    scale = math.sqrt((x1p / rx) ** 2 + (y1p / ry) ** 2)
+    if scale > 1:
+        rx *= scale
+        ry *= scale
     r2 = ((rx * ry) ** 2 - (rx * y1p) ** 2 - (ry * x1p) ** 2) / (
         (rx * y1p) ** 2 + (ry * x1p) ** 2
     )
@@ -432,14 +598,9 @@ class Matrix:
             self.values = [sx, 0, 0, sy, 0, 0]
         elif op == "rotate":
             phi = math.pi * d[0] / 180.0
-            self.values = [
-                math.cos(phi),
-                math.sin(phi),
-                -math.sin(phi),
-                math.cos(phi),
-                0,
-                0,
-            ]
+            c, s = math.cos(phi), math.sin(phi)
+            cx, cy = (d[1], d[2]) if len(d) >= 3 else (0.0, 0.0)
+            self.values = [c, s, -s, c, cx - c * cx + s * cy, cy - s * cx - c * cy]
         elif op == "skewX":
             tphi = math.tan(math.pi * d[0] / 180.0)
             self.values = [1, 0, tphi, 1, 0, 0]
@@ -486,6 +647,13 @@ class Matrix:
         a, b, c, d, e, f = self.values
         return f"{a:g} {b:g} {c:g} {d:g} {e:g} {f:g}"
 
+    def determinant(self):
+        a, b, c, d = self.values[:4]
+        return a * d - b * c
+
+    def linear_scale(self):
+        return math.sqrt(abs(self.determinant()))
+
 
 # --------------------------------------------------------------------
 
@@ -498,6 +666,7 @@ class LinearGradient(NamedTuple):
     stops: list
     matrix: Matrix
     href: str
+    units: str = "objectBoundingBox"
 
 
 class RadialGradient(NamedTuple):
@@ -509,6 +678,13 @@ class RadialGradient(NamedTuple):
     stops: list
     matrix: Matrix
     href: str
+    units: str = "objectBoundingBox"
+
+
+class ClipPath(NamedTuple):
+    shapes: list  # (matrix, Ipe path operators) for each child shape
+    ref: str  # clip-path of the clipPath itself, intersected with its shapes
+    supported: bool
 
 
 class Svg:
@@ -527,8 +703,11 @@ class Svg:
         attr = {}
         for a in attribute_names:
             attr[a] = None
+        attr["matrix"] = Matrix()
         self.attributes = [attr]
         self.defs = {}
+        self.bbox_gradients = {}
+        self.warned = set()
         self.symbols = {}
         self.elements = {}
         self.active_uses = set()
@@ -538,17 +717,26 @@ class Svg:
         for n in self.dom.childNodes:
             if n.nodeType == Node.ELEMENT_NODE and n.tagName == "svg":
                 if n.hasAttribute("viewBox"):
-                    x, y, w, h = [
-                        float(x) for x in parse_list(n.getAttribute("viewBox"))
-                    ]
-                    self.width = w
-                    self.height = h
-                    self.origin = (x, y)
+                    viewbox = [float(x) for x in parse_list(n.getAttribute("viewBox"))]
+                    # user-space size, used for percentages in gradients
+                    self.width = viewbox[2]
+                    self.height = viewbox[3]
+                    self.paper = (
+                        viewport_length(n.getAttribute("width")) or self.width,
+                        viewport_length(n.getAttribute("height")) or self.height,
+                    )
+                    self.viewbox_matrix = viewbox_matrix(
+                        viewbox, self.paper, n.getAttribute("preserveAspectRatio")
+                    )
                 else:
-                    self.width = parse_float(n.getAttribute("width")) or 500
-                    self.height = parse_float(n.getAttribute("height")) or 500
-                    self.origin = (0, 0)
+                    self.width = viewport_length(n.getAttribute("width")) or 500
+                    self.height = viewport_length(n.getAttribute("height")) or 500
+                    self.paper = (self.width, self.height)
+                    self.viewbox_matrix = Matrix()
                 self.root = n
+                # the viewBox scale also applies to stroke widths
+                attr["matrix"] = self.viewbox_matrix
+                self.attributes = [self.parse_attributes(n)]
                 self.elements = {
                     element.getAttribute("id"): element
                     for element in (n, *n.getElementsByTagName("*"))
@@ -573,25 +761,30 @@ class Svg:
             self.out.write(f"<info title={quoteattr(self.title)}/>\n")
         self.out.write("<ipestyle>\n")
         self.out.write(
-            ('<layout paper="%d %d" frame="%d %d" ' + 'origin="0 0" crop="no"/>\n')
-            % (self.width, self.height, self.width, self.height)
+            ('<layout paper="%g %g" frame="%g %g" ' + 'origin="0 0" crop="no"/>\n')
+            % (*self.paper, *self.paper)
         )
         for t in range(0, 100, 10):
             self.out.write(f'<opacity name="{t}%" value="{t / 100:g}"/>\n')
         # set SVG defaults
         self.out.write('<pathstyle cap="0" join="0" fillrule="wind"/>\n')
         self.out.write("</ipestyle>\n")
-        # collect definitions
-        self.collect_definitions(self.root)
-        self.resolve_gradient_stops()
         # write definitions into stylesheet
-        if len(self.defs) > 0:
+        gradients = [
+            (f"g{k}", definition)
+            for k, definition in self.defs.items()
+            if isinstance(definition, (LinearGradient, RadialGradient))
+            and definition.stops
+            and definition.units == "userSpaceOnUse"
+        ]
+        gradients += self.bbox_gradients.values()
+        if gradients:
             self.out.write("<ipestyle>\n")
-            for k, definition in self.defs.items():
-                if isinstance(definition, LinearGradient) and definition.stops:
-                    self.write_linear_gradient(k)
-                elif isinstance(definition, RadialGradient) and definition.stops:
-                    self.write_radial_gradient(k)
+            for name, gradient in gradients:
+                if isinstance(gradient, LinearGradient):
+                    self.write_linear_gradient(name, gradient)
+                else:
+                    self.write_radial_gradient(name, gradient)
             self.out.write("</ipestyle>\n")
 
     def resolve_gradient_stops(self):
@@ -600,7 +793,8 @@ class Svg:
             if gradient.stops or not gradient.href or name in resolving:
                 return
             inherited = self.defs.get(gradient.href)
-            if type(inherited) is not type(gradient):
+            # stops may come from a gradient of either type
+            if not isinstance(inherited, (LinearGradient, RadialGradient)):
                 return
             resolve(gradient.href, resolving | {name})
             inherited = self.defs[gradient.href]
@@ -612,16 +806,11 @@ class Svg:
                 resolve(name, set())
 
     def collect_definitions(self, node):
-        # Collect Everything inside a <defs> tag for which we have a defs_<tagname>() method
-        defs_children = node.getElementsByTagName("defs")
-        for c in defs_children:
-            for my_attr in dir(self):
-                if my_attr[:4] == "def_":
-                    tag_name = my_attr[4:]
-                    # There is a parsing method for tags named <tag_name>
-                    parseable_tags = node.getElementsByTagName(tag_name)
-                    for tag in parseable_tags:
-                        getattr(self, my_attr)(tag)
+        # SVG allows these elements anywhere, not only inside <defs>
+        for my_attr in dir(self):
+            if my_attr[:4] == "def_":
+                for tag in node.getElementsByTagName(my_attr[4:]):
+                    getattr(self, my_attr)(tag)
 
     def parse_svg(self, outname, **kwargs):
         """parses the svg, and writes it to file.
@@ -642,7 +831,20 @@ class Svg:
                 self.parse_svg_inner(outmode)
 
     def parse_svg_inner(self, outmode):
-        # write header
+        if outmode not in ("file", "clipboard"):
+            sys.stderr.write(f"bad output mode '{outmode}'")
+            return
+
+        if outmode == "file":
+            self.collect_definitions(self.root)
+            self.resolve_gradient_stops()
+
+        # the body goes first into a buffer: per-shape gradients are only known
+        # after writing it, but the stylesheet must precede the page
+        out, self.out = self.out, io.StringIO()
+        self.write_data()
+        body, self.out = self.out.getvalue(), out
+
         if outmode == "file":
             self.write_ipe_header()
             self.out.write("<page>\n")
@@ -650,27 +852,20 @@ class Svg:
                 self.out.write("<notes>")
                 self.out.write(escape(self.description))
                 self.out.write("</notes>\n")
-        elif outmode == "clipboard":
-            self.out.write('<ipeselection pos="0 0">\n')
         else:
-            sys.stderr.write(f"bad output mode '{outmode}'")
-            return
+            self.out.write('<ipeselection pos="0 0">\n')
 
-        self.write_data()
+        self.out.write(body)
 
         if outmode == "file":
             self.out.write("</page>\n")
             self.out.write("</ipe>\n")
-        elif outmode == "clipboard":
+        else:
             self.out.write("</ipeselection>\n")
 
     def write_data(self):
-        # start real data
-        m = Matrix([1, 0, 0, 1, 0, self.height / 2.0])
-        m = m * Matrix([1, 0, 0, -1, 0, 0])
-        m = m * Matrix(
-            [1, 0, 0, 1, -self.origin[0], -(self.origin[1] + self.height / 2.0)]
-        )
+        # start real data: viewBox mapping, then flip y into Ipe's y-up paper
+        m = Matrix([1, 0, 0, -1, 0, self.paper[1]]) * self.viewbox_matrix
         self.out.write(f'<group matrix="{m!s}">\n')
         self.parse_nodes(self.root)
         self.out.write("</group>\n")
@@ -694,42 +889,43 @@ class Svg:
         ) and self.parse_attributes(node)["visibility"] in ("hidden", "collapse"):
             return
         node_name = "node_" + node.tagName.replace(":", "_")
-        if hasattr(self, node_name):
-            getattr(self, node_name)(node)
-        else:
+        if not hasattr(self, node_name):
             sys.stderr.write(f"Unhandled node: {node.tagName}\n")
+            return
+        opened = self.open_clip_groups(node)
+        getattr(self, node_name)(node)
+        self.out.write("</group>\n" * opened)
 
     # --------------------------------------------------------------------
 
-    def write_linear_gradient(self, k):
-        gradient = self.defs[k]
-        self.out.write(f'<gradient name="g{k}" type="axial" extend="yes"\n')
+    def write_linear_gradient(self, name, gradient):
+        self.out.write(f'<gradient name="{name}" type="axial" extend="yes"\n')
         self.out.write(f' matrix="{gradient.matrix!s}"')
         self.out.write(
             f' coords="{gradient.x1:g} {gradient.y1:g} '
             f'{gradient.x2:g} {gradient.y2:g}">\n'
         )
-        for s in gradient.stops:
-            offset, color = s
-            self.out.write(
-                f' <stop offset="{offset:g}" color="{color[0]:g} {color[1]:g} {color[2]:g}"/>\n'
-            )
+        self.write_stops(gradient)
         self.out.write("</gradient>\n")
 
-    def write_radial_gradient(self, k):
-        gradient = self.defs[k]
-        self.out.write(f'<gradient name="g{k}" type="radial" extend="yes"\n')
+    def write_radial_gradient(self, name, gradient):
+        self.out.write(f'<gradient name="{name}" type="radial" extend="yes"\n')
         self.out.write(f' matrix="{gradient.matrix!s}"')
         self.out.write(
             f' coords="{gradient.fx:g} {gradient.fy:g} {0:g} '
             f'{gradient.cx:g} {gradient.cy:g} {gradient.r:g}">\n'
         )
-        for s in gradient.stops:
-            offset, color = s
-            self.out.write(
-                f' <stop offset="{offset:g}" color="{color[0]:g} {color[1]:g} {color[2]:g}"/>\n'
-            )
+        self.write_stops(gradient)
         self.out.write("</gradient>\n")
+
+    def write_stops(self, gradient):
+        for offset, color, opacity in gradient.stops:
+            self.out.write(
+                f' <stop offset="{offset:g}" color="{color[0]:g} {color[1]:g} {color[2]:g}"'
+            )
+            if opacity < 1:
+                self.out.write(f' opacity="{opacity:g}"')
+            self.out.write("/>\n")
 
     def get_stops(self, n):
         stops = []
@@ -747,11 +943,13 @@ class Svg:
                 color = parse_color(m.getAttribute("stop-color"))
             else:
                 color = [0, 0, 0]
+            opacity = m.getAttribute("stop-opacity")
             if m.hasAttribute("style"):
                 sdict = parse_style(m.getAttribute("style"))
                 if "stop-color" in sdict:
                     color = parse_color(sdict["stop-color"])
-            stops.append((offs, color))
+                opacity = sdict.get("stop-opacity", opacity)
+            stops.append((offs, color, parse_stop_opacity(opacity)))
         return stops
 
     def node_inkscape_clipboard(self, node):
@@ -763,109 +961,132 @@ class Svg:
         # we call node_g() on the fake group node.
         self.symbols[node.getAttribute("id")] = node
 
+    def gradient_units(self, n):
+        """Returns the gradient's units and the sizes that percentages refer to."""
+        if n.getAttribute("gradientUnits") == "userSpaceOnUse":
+            diagonal = math.sqrt((self.width**2 + self.height**2) / 2)
+            return "userSpaceOnUse", (self.width, self.height, diagonal)
+        # also the fallback for invalid values; percentages are fractions of the box
+        return "objectBoundingBox", (1.0, 1.0, 1.0)
+
+    def gradient_length(self, n, name, default, size):
+        s = n.getAttribute(name) or default
+        if s.endswith("%"):
+            return float(s[:-1]) / 100.0 * size
+        return parse_float(s)
+
     def def_linearGradient(self, n):
-        # printAttributes(n)
         kid = n.getAttribute("id")
-        x1 = 0
-        y1 = 0
-        x2 = self.width
-        y2 = self.height
-        if n.hasAttribute("x1"):
-            s = n.getAttribute("x1")
-            if s.endswith("%"):
-                x1 = self.width * float(s[:-1]) / 100.0
-            else:
-                x1 = parse_float(s)
-        if n.hasAttribute("x2"):
-            s = n.getAttribute("x2")
-            if s.endswith("%"):
-                x2 = self.width * float(s[:-1]) / 100.0
-            else:
-                x2 = parse_float(s)
-        if n.hasAttribute("y1"):
-            s = n.getAttribute("y1")
-            if s.endswith("%"):
-                y1 = self.width * float(s[:-1]) / 100.0
-            else:
-                y1 = parse_float(s)
-        if n.hasAttribute("y2"):
-            s = n.getAttribute("y2")
-            if s.endswith("%"):
-                y2 = self.width * float(s[:-1]) / 100.0
-            else:
-                y2 = parse_float(s)
+        units, (w, h, _) = self.gradient_units(n)
+        x1 = self.gradient_length(n, "x1", "0%", w)
+        y1 = self.gradient_length(n, "y1", "0%", h)
+        x2 = self.gradient_length(n, "x2", "100%", w)
+        y2 = self.gradient_length(n, "y2", "0%", h)
         matrix = get_gradientTransform(n)
         stops = self.get_stops(n)
-        href = n.getAttribute("xlink:href")
+        href = get_href(n)
         href = href[1:] if href.startswith("#") else ""
-        self.defs[kid] = LinearGradient(x1, y1, x2, y2, stops, matrix, href)
+        self.defs[kid] = LinearGradient(x1, y1, x2, y2, stops, matrix, href, units)
 
     def def_radialGradient(self, n):
-        # printAttributes(n)
         kid = n.getAttribute("id")
-        cx = "50%"
-        cy = "50%"
-        r = "50%"
-        if n.hasAttribute("cx"):
-            cx = n.getAttribute("cx")
-        if cx.endswith("%"):
-            cx = self.width * float(cx[:-1]) / 100.0
-        else:
-            cx = parse_float(cx)
-        if n.hasAttribute("cy"):
-            cy = n.getAttribute("cy")
-        if cy.endswith("%"):
-            cy = self.width * float(cy[:-1]) / 100.0
-        else:
-            cy = parse_float(cy)
-        if n.hasAttribute("r"):
-            r = n.getAttribute("r")
-        if r.endswith("%"):
-            r = self.width * float(r[:-1]) / 100.0
-        else:
-            r = parse_float(r)
-        if n.hasAttribute("fx"):
-            s = n.getAttribute("fx")
-            if s.endswith("%"):
-                fx = self.width * float(s[:-1]) / 100.0
-            else:
-                fx = parse_float(s)
-        else:
-            fx = cx
-        if n.hasAttribute("fy"):
-            s = n.getAttribute("fy")
-            if s.endswith("%"):
-                fy = self.width * float(s[:-1]) / 100.0
-            else:
-                fy = parse_float(s)
-        else:
-            fy = cy
+        units, (w, h, diagonal) = self.gradient_units(n)
+        cx = self.gradient_length(n, "cx", "50%", w)
+        cy = self.gradient_length(n, "cy", "50%", h)
+        r = self.gradient_length(n, "r", "50%", diagonal)
+        # the focal point defaults to the centre
+        fx = self.gradient_length(n, "fx", n.getAttribute("cx") or "50%", w)
+        fy = self.gradient_length(n, "fy", n.getAttribute("cy") or "50%", h)
         matrix = get_gradientTransform(n)
         stops = self.get_stops(n)
-        href = n.getAttribute("xlink:href")
+        href = get_href(n)
         href = href[1:] if href.startswith("#") else ""
-        self.defs[kid] = RadialGradient(cx, cy, r, fx, fy, stops, matrix, href)
+        self.defs[kid] = RadialGradient(cx, cy, r, fx, fy, stops, matrix, href, units)
 
     def def_clipPath(self, node):
-        kid = node.getAttribute("id")
-        # only a single path is implemented
+        shapes = []
+        supported = node.getAttribute("clipPathUnits") != "objectBoundingBox"
         for n in node.childNodes:
-            if n.nodeType != Node.ELEMENT_NODE or n.tagName != "path":
+            if n.nodeType != Node.ELEMENT_NODE or n.tagName in ignored_nodes:
                 continue
-            m = parse_transform(n)
-            d = n.getAttribute("d")
-            output = io.StringIO()
-            parse_path(output, d)
-            path = output.getvalue()
-            output.close()
-            self.defs[kid] = ("clipPath", m, path)
-            return
+            shape = self.clip_shape(n)
+            if shape is None:
+                supported = False
+            else:
+                shapes.append(shape)
+        self.defs[node.getAttribute("id")] = ClipPath(
+            shapes, self.clip_reference(node), supported
+        )
 
-    def def_g(self, group):
-        self.collect_definitions(group)
+    def clip_shape(self, n, seen=()):
+        """(matrix, Ipe path operators) of a shape in a clipPath, None if unsupported."""
+        if n.tagName == "use":
+            href = get_href(n)
+            target = self.elements.get(href[1:])
+            if not href.startswith("#") or target is None or href in seen:
+                return None
+            inner = self.clip_shape(target, (*seen, href))
+            if inner is None:
+                return None
+            dx = parse_float(n.getAttribute("x")) or 0.0
+            dy = parse_float(n.getAttribute("y")) or 0.0
+            offset = Matrix([1, 0, 0, 1, dx, dy])
+            return ((parse_transform(n) or Matrix()) * offset * inner[0], inner[1])
+        geometry = self.shape_geometry(n)
+        if geometry is None:
+            return None
+        return (parse_transform(n) or Matrix(), geometry)
 
-    def def_defs(self, node):
-        self.collect_definitions(node)
+    def clip_reference(self, n):
+        if n.hasAttribute("style"):
+            ref = parse_style(n.getAttribute("style")).get("clip-path")
+            if ref:
+                return ref
+        return n.getAttribute("clip-path")
+
+    def warn_once(self, message):
+        if message not in self.warned:
+            self.warned.add(message)
+            sys.stderr.write(message + "\n")
+
+    def clip_regions(self, ref, seen=()):
+        """Shapes whose intersection is the clip region; None if not expressible."""
+        mat = re.match(r"url\(\s*#([^)\s]+)\s*\)", ref)
+        clip = self.defs.get(mat.group(1)) if mat else None
+        if not isinstance(clip, ClipPath):
+            return []
+        name = mat.group(1)
+        if not clip.supported or len(clip.shapes) != 1 or name in seen:
+            if not clip.supported:
+                reason = "unsupported content or clipPathUnits"
+            elif name in seen:
+                reason = "it refers to itself"
+            else:
+                reason = (
+                    f"union of {len(clip.shapes)} shapes"
+                    if clip.shapes
+                    else "no shapes"
+                )
+            self.warn_once(f"Ignoring clipPath '{name}' (no clipping): {reason}")
+            return None
+        nested = self.clip_regions(clip.ref, (*seen, name)) if clip.ref else []
+        if nested is None:
+            return None
+        return [clip.shapes[0], *nested]
+
+    def open_clip_groups(self, n):
+        """Opens groups clipping to n's clip-path, returns how many were opened."""
+        # the clip lives in n's user space, so n's own transform applies to it too
+        transform = parse_transform(n) or Matrix()
+        opened = 0
+        for matrix, path in self.clip_regions(self.clip_reference(n)) or []:
+            m = transform * matrix
+            if abs(m.determinant()) < 1e-12:
+                continue
+            self.out.write(f'<group matrix="{m}" clip="{" ".join(path.split())}">\n')
+            self.out.write(f'<group matrix="{m.inverse()}">\n')
+            opened += 2
+        return opened
 
     # --------------------------------------------------------------------
 
@@ -884,58 +1105,119 @@ class Svg:
                 if a in sdict:
                     value = sdict[a]
                     attr[a] = pattr[a] if value == "inherit" else value
+        m = parse_transform(n)
+        if m:
+            attr["matrix"] = pattr.get("matrix", Matrix()) * m
+        else:
+            attr["matrix"] = pattr.get("matrix", Matrix())
         return attr
 
-    def write_pathattributes(self, a):
-        stroke = parse_color(a["stroke"])
+    def usable_gradient(self, name):
+        gradient = self.defs.get(name)
+        if isinstance(gradient, (LinearGradient, RadialGradient)) and gradient.stops:
+            return gradient
+        return None
+
+    def gradient_name(self, name, gradient, geometry):
+        """Ipe name of the gradient for this shape, or None if it paints nothing."""
+        if gradient.units == "userSpaceOnUse":
+            return f"g{name}"
+        bbox = geometry_bbox(geometry)
+        # SVG paints nothing for a degenerate bounding box
+        if bbox is None or bbox[0] == bbox[2] or bbox[1] == bbox[3]:
+            return None
+        if (name, bbox) not in self.bbox_gradients:
+            x0, y0, x1, y1 = bbox
+            unit_box = Matrix([x1 - x0, 0, 0, y1 - y0, x0, y0])
+            self.bbox_gradients[name, bbox] = (
+                f"g{name}_{len(self.bbox_gradients) + 1}",
+                gradient._replace(matrix=unit_box * gradient.matrix),
+            )
+        return self.bbox_gradients[name, bbox][0]
+
+    def paint_gradient(self, paint, geometry):
+        """For a 'url(#id) fallback' paint: (colour, Ipe gradient name or None)."""
+        name, fallback = paint.group(1), parse_color(paint.group(2))
+        gradient = self.usable_gradient(name)
+        if gradient is None:
+            element = self.elements.get(name)
+            if element is None:
+                reason = "not found"
+            elif element.tagName in ("linearGradient", "radialGradient"):
+                reason = "has no stops"
+            else:
+                reason = f"is a <{element.tagName}>, which is not supported"
+            self.warn_once(f"Paint server '{name}' {reason}")
+            return fallback, None
+        gname = self.gradient_name(name, gradient, geometry)
+        if gname is None:
+            return None, None  # degenerate bounding box: nothing is painted
+        return fallback or gradient.stops[0][1], gname
+
+    def write_pathattributes(self, a, geometry):
+        stroke_gradient = None
+        paint = GRADIENT_PAINT.match(a["stroke"] or "")
+        if paint:
+            stroke, stroke_gradient = self.paint_gradient(paint, geometry)
+        else:
+            stroke = parse_color(a["stroke"])
         if stroke:
             self.out.write(' stroke="{:g} {:g} {:g}"'.format(*stroke))
+        if stroke_gradient:
+            self.out.write(f' stroke-gradient="{stroke_gradient}"')
         fill = a["fill"]
-        if fill and fill.startswith("url("):
-            mat = re.match(r"url\(#([^)]+)\).*", fill)
-            if mat:
-                grad = mat.group(1)
-                if (
-                    grad in self.defs
-                    and isinstance(self.defs[grad], (LinearGradient, RadialGradient))
-                    and self.defs[grad].stops
-                ):
-                    self.out.write(f' fill="1" gradient="g{grad}"')
-                else:
-                    self.out.write(' fill="0"')
+        fill_painted = True
+        paint = GRADIENT_PAINT.match(fill or "")
+        if paint:
+            colour, fill_gradient = self.paint_gradient(paint, geometry)
+            if fill_gradient:
+                self.out.write(f' fill="1" gradient="{fill_gradient}"')
+            elif colour:
+                self.out.write(' fill="{:g} {:g} {:g}"'.format(*colour))
+            else:
+                fill_painted = False
         elif fill is None:
             self.out.write(' fill="0"')
         else:
-            fill = parse_color(fill)
-            if fill:
-                self.out.write(' fill="{:g} {:g} {:g}"'.format(*fill))
+            colour = parse_color(fill)
+            if colour:
+                self.out.write(' fill="{:g} {:g} {:g}"'.format(*colour))
+            elif fill == "none":
+                fill_painted = False
         opacity = float(a["opacity"] or "1")
         fill_opacity = parse_opacity(opacity * float(a["fill-opacity"] or "1"))
         stroke_opacity = parse_opacity(opacity * float(a["stroke-opacity"] or "1"))
-        if a["fill"] == "none" and stroke is None:
+        if not fill_painted and stroke is None:
             stroke_opacity = 0
         if fill_opacity < 100:
             self.out.write(f' opacity="{fill_opacity}%"')
         if stroke_opacity < 100:
             self.out.write(f' stroke-opacity="{stroke_opacity}%"')
+        elif fill_opacity < 100:
+            # if stroke-opacity is missing, Ipe uses opacity!
+            self.out.write(' stroke-opacity="opaque"')
         stroke_width = parse_float(a["stroke-width"])
         if stroke_width is None:
             stroke_width = 1.0
+        matrix = a.get("matrix")
+        scale = matrix.linear_scale() if matrix else 1.0
+        stroke_width *= scale
         self.out.write(f' pen="{stroke_width:g}"')
-        if a["fill-rule"] == "nonzero":
-            self.out.write(' fillrule="wind"')
+        # the stylesheet makes "wind" (SVG's default) the default; Ipe's own is even-odd
+        fill_rules = {"nonzero": "wind", "evenodd": "eofill"}
+        if a["fill-rule"] in fill_rules:
+            self.out.write(f' fillrule="{fill_rules[a["fill-rule"]]}"')
         k = {"butt": 0, "round": 1, "square": 2}
         if a["stroke-linecap"] in k:
             self.out.write(f' cap="{k[a["stroke-linecap"]]}"')
         k = {"miter": 0, "round": 1, "bevel": 2}
         if a["stroke-linejoin"] in k:
             self.out.write(f' join="{k[a["stroke-linejoin"]]}"')
-        dasharray = a["stroke-dasharray"]
-        dashoffset = a["stroke-dashoffset"]
-        if dasharray and dashoffset and dasharray != "none":
-            d = parse_list(dasharray)
-            off = parse_float(dashoffset)
-            self.out.write(' dash="[{}] {:g}"'.format(" ".join(d), off))
+        dash = parse_dash(a["stroke-dasharray"], a["stroke-dashoffset"])
+        if dash:
+            dashes, offset = dash
+            lengths = " ".join(f"{v * scale:g}" for v in dashes)
+            self.out.write(f' dash="[{lengths}] {offset * scale:g}"')
 
     # --------------------------------------------------------------------
 
@@ -953,11 +1235,11 @@ class Svg:
         self.attributes.pop()
 
     def node_use(self, n):
-        if not n.hasAttribute("xlink:href"):
-            print("Ignoring use node without xlink:href")
+        target_name = get_href(n)
+        if not target_name:
+            print("Ignoring use node without href")
             return
 
-        target_name = n.getAttribute("xlink:href")
         if not target_name.startswith("#"):
             print("Ignoring use node not referencing symbol ID")
             return
@@ -997,11 +1279,16 @@ class Svg:
         scale_m = Matrix(f"scale({scale_x} {scale_y})")
         translate_m = Matrix(f"translate({translate_x} {translate_y})")
         m = scale_m * translate_m
+        use_transform = parse_transform(n)
+        group_m = use_transform * m if use_transform else m
 
         # Use a group for the possible transform matrix from this
         # use node
-        self.out.write(f'<group   matrix="{m}">\n')
-        self.attributes.append(self.parse_attributes(n))
+        self.out.write(f'<group   matrix="{group_m}">\n')
+        # parse_attributes already folded the use's own transform into "matrix"
+        attr = self.parse_attributes(n)
+        attr["matrix"] = attr["matrix"] * m
+        self.attributes.append(attr)
         self.active_uses.add(target_name)
         try:
             if target_name in self.symbols:
@@ -1014,7 +1301,7 @@ class Svg:
         self.out.write("</group>\n")
 
     def node_a(self, n):
-        url = n.getAttribute("xlink:href")
+        url = get_href(n)
         if url is not None:
             self.out.write(f'<group url="{url}">')
         self.parse_nodes(n)
@@ -1023,39 +1310,12 @@ class Svg:
 
     def collect_text(self, root):
         for n in root.childNodes:
-            if n.nodeType == Node.TEXT_NODE:
+            if n.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
                 self.text += n.data
             if n.nodeType != Node.ELEMENT_NODE:
                 continue
             if n.tagName == "tspan":  # recurse
                 self.collect_text(n)
-
-    def parse_text_style(self, t):
-        attrs = {}
-        if not t.hasAttribute("style"):
-            return attrs
-
-        tokens = t.getAttribute("style").split(";")
-        for token in tokens:
-            if len(token.split(":")) != 2:
-                # Strange token
-                sys.stderr.write(f"Ignored style token: {token}\n")
-                continue
-            key, value = token.split(":")
-            value = value.strip().lower()
-            key = key.strip().lower()
-
-            if key == "font-weight":
-                if value in ("bold", "bolder"):
-                    attrs["weight"] = "bold"
-            elif key == "font-size":
-                attrs["size"] = parse_float(value)
-            elif key == "font-family":
-                attrs["svg-families"] = [v.strip() for v in (value.split(","))]
-            elif key == "text-anchor":
-                attrs["anchor"] = value
-
-        return attrs
 
     def parse_text_attrs(self, t):
         raw_attrs = self.parse_attributes(t)
@@ -1065,6 +1325,16 @@ class Svg:
             attrs["size"] = parse_float(raw_attrs["font-size"])
         if raw_attrs["fill"]:
             attrs["color"] = parse_color(raw_attrs["fill"])
+        weight = (raw_attrs["font-weight"] or "").strip().lower()
+        if weight in ("bold", "bolder"):
+            attrs["weight"] = "bold"
+        if raw_attrs["font-family"]:
+            attrs["svg-families"] = [
+                f.strip().strip("'\"").lower()
+                for f in raw_attrs["font-family"].split(",")
+            ]
+        if raw_attrs["text-anchor"]:
+            attrs["anchor"] = raw_attrs["text-anchor"].strip().lower()
 
         return attrs
 
@@ -1088,8 +1358,7 @@ class Svg:
         else:
             y = float(t.getAttribute("y"))
 
-        attributes = self.parse_text_style(t)
-        attributes.update(self.parse_text_attrs(t))
+        attributes = self.parse_text_attrs(t)
 
         self.out.write(f'<text pos="{x:g} {y:g}"')
         self.out.write(' transformations="affine" valign="baseline"')
@@ -1105,15 +1374,10 @@ class Svg:
         if "color" in attributes and attributes["color"] is not None:
             self.out.write(' stroke="{:g} {:g} {:g}"'.format(*attributes["color"]))
 
-        halign = "left"
-        valign = "bottom"
-        if "anchor" in attributes:
-            if attributes["anchor"] == "middle":
-                halign = "center"
-                valign = "center"
-            elif attributes["anchor"] == "end":
-                halign = "right"
-        self.out.write(f' valign="{valign}"')
+        # text-anchor affects only the horizontal position; SVG's y is the baseline
+        halign = {"middle": "center", "end": "right"}.get(
+            attributes.get("anchor"), "left"
+        )
         self.out.write(f' halign="{halign}"')
 
         self.text = ""
@@ -1147,7 +1411,7 @@ class Svg:
         if not have_pil:
             sys.stderr.write("No Python image library, <image> ignored\n")
             return
-        href = node.getAttribute("xlink:href")
+        href = get_href(node)
         if not href.startswith("data:image/png;base64,"):
             sys.stderr.write(f"Image ignored, href = {href[:40]}...\n")
             return
@@ -1155,16 +1419,6 @@ class Svg:
         y = float(node.getAttribute("y"))
         w = float(node.getAttribute("width"))
         h = float(node.getAttribute("height"))
-        clipped = False
-        if node.hasAttribute("clip-path"):
-            mat = re.match(r"url\(#([^)]+)\).*", node.getAttribute("clip-path"))
-            if mat:
-                cp = mat.group(1)
-                if cp in self.defs and self.defs[cp][0] == "clipPath":
-                    cp, m, path = self.defs[cp]
-                    clipped = True
-                    self.out.write(f'<group matrix="{m!s}" clip="{path}">\n')
-                    self.out.write(f'<group matrix="{m.inverse()!s}">\n')
         self.out.write(f'<image rect="{x:g} {y:g} {x + w:g} {y + h:g}"')
         data = base64.b64decode(href[22:])
         fin = io.BytesIO(data)
@@ -1190,8 +1444,6 @@ class Svg:
         self.out.write(base64.b64encode(data).decode("ascii"))
         fin.close()
         self.out.write("</image>\n")
-        if clipped:
-            self.out.write("</group>\n</group>\n")
 
     # handled in def pass
     def node_linearGradient(self, n):
@@ -1200,14 +1452,29 @@ class Svg:
     def node_radialGradient(self, n):
         pass
 
-    def node_rect(self, n):
-        attr = self.parse_attributes(n)
+    def write_path(self, n, geometry):
+        """Writes a <path> for element n; geometry is Ipe path operators."""
+        if not geometry.strip():
+            return  # empty paths crash Ipe
         self.out.write("<path")
         m = parse_transform(n)
         if m:
             self.out.write(f' matrix="{m}"')
-        self.write_pathattributes(attr)
+        self.write_pathattributes(self.parse_attributes(n), geometry)
         self.out.write(">\n")
+        self.out.write(geometry)
+        self.out.write("</path>\n")
+
+    def shape_geometry(self, n):
+        """Ipe path operators for a basic shape element, None for other elements."""
+        method = getattr(self, "geometry_" + n.tagName, None)
+        return method(n) if method else None
+
+    def node_rect(self, n):
+        self.write_path(n, self.geometry_rect(n))
+
+    def geometry_rect(self, n):
+        geometry = io.StringIO()
         if not n.hasAttribute("x"):
             x = 0.0
         else:
@@ -1219,19 +1486,78 @@ class Svg:
             y = parse_float(n.getAttribute("y"))
         w = parse_float(n.getAttribute("width"))
         h = parse_float(n.getAttribute("height"))
-        self.out.write(
-            f"{x:g} {y:g} m {x + w:g} {y:g} l {x + w:g} {y + h:g} l {x:g} {y + h:g} l h\n"
-        )
-        self.out.write("</path>\n")
+
+        rx = None
+        ry = None
+        if n.hasAttribute("rx"):
+            s = n.getAttribute("rx")
+            if s.endswith("%"):
+                rx = w * float(s[:-1]) / 100.0
+            else:
+                rx = parse_float(s)
+        if n.hasAttribute("ry"):
+            s = n.getAttribute("ry")
+            if s.endswith("%"):
+                ry = h * float(s[:-1]) / 100.0
+            else:
+                ry = parse_float(s)
+        if n.hasAttribute("style"):
+            sdict = parse_style(n.getAttribute("style"))
+            if "rx" in sdict and rx is None:
+                s = sdict["rx"]
+                if s.endswith("%"):
+                    rx = w * float(s[:-1]) / 100.0
+                else:
+                    rx = parse_float(s)
+            if "ry" in sdict and ry is None:
+                s = sdict["ry"]
+                if s.endswith("%"):
+                    ry = h * float(s[:-1]) / 100.0
+                else:
+                    ry = parse_float(s)
+        if rx is None and ry is None:
+            rx = 0.0
+            ry = 0.0
+        elif rx is None:
+            rx = ry
+        elif ry is None:
+            ry = rx
+        rx = max(0.0, min(rx, w / 2.0))
+        ry = max(0.0, min(ry, h / 2.0))
+
+        if rx == 0.0 or ry == 0.0:
+            geometry.write(
+                f"{x:g} {y:g} m {x + w:g} {y:g} l {x + w:g} {y + h:g} l {x:g} {y + h:g} l h\n"
+            )
+        else:
+            geometry.write(f"{x + rx:g} {y:g} m\n")
+            if w > 2 * rx:
+                geometry.write(f"{x + w - rx:g} {y:g} l\n")
+            geometry.write(
+                f"{rx:g} 0 0 {ry:g} {x + w - rx:g} {y + ry:g} {x + w:g} {y + ry:g} a\n"
+            )
+            if h > 2 * ry:
+                geometry.write(f"{x + w:g} {y + h - ry:g} l\n")
+            geometry.write(
+                f"{rx:g} 0 0 {ry:g} {x + w - rx:g} {y + h - ry:g} {x + w - rx:g} {y + h:g} a\n"
+            )
+            if w > 2 * rx:
+                geometry.write(f"{x + rx:g} {y + h:g} l\n")
+            geometry.write(
+                f"{rx:g} 0 0 {ry:g} {x + rx:g} {y + h - ry:g} {x:g} {y + h - ry:g} a\n"
+            )
+            if h > 2 * ry:
+                geometry.write(f"{x:g} {y + ry:g} l\n")
+            geometry.write(
+                f"{rx:g} 0 0 {ry:g} {x + rx:g} {y + ry:g} {x + rx:g} {y:g} a\n"
+            )
+            geometry.write("h\n")
+        return geometry.getvalue()
 
     def node_circle(self, n):
-        self.out.write("<path")
-        m = parse_transform(n)
-        if m:
-            self.out.write(f' matrix="{m}"')
-        attr = self.parse_attributes(n)
-        self.write_pathattributes(attr)
-        self.out.write(">\n")
+        self.write_path(n, self.geometry_circle(n))
+
+    def geometry_circle(self, n):
         cx = 0
         cy = 0
         if n.hasAttribute("cx"):
@@ -1239,17 +1565,12 @@ class Svg:
         if n.hasAttribute("cy"):
             cy = parse_float(n.getAttribute("cy"))
         r = parse_float(n.getAttribute("r"))
-        self.out.write(f"{r:g} 0 0 {r:g} {cx:g} {cy:g} e\n")
-        self.out.write("</path>\n")
+        return f"{r:g} 0 0 {r:g} {cx:g} {cy:g} e\n"
 
     def node_ellipse(self, n):
-        self.out.write("<path")
-        m = parse_transform(n)
-        if m:
-            self.out.write(f' matrix="{m}"')
-        attr = self.parse_attributes(n)
-        self.write_pathattributes(attr)
-        self.out.write(">\n")
+        self.write_path(n, self.geometry_ellipse(n))
+
+    def geometry_ellipse(self, n):
         cx = 0
         cy = 0
         if n.hasAttribute("cx"):
@@ -1258,17 +1579,12 @@ class Svg:
             cy = float(n.getAttribute("cy"))
         rx = float(n.getAttribute("rx"))
         ry = float(n.getAttribute("ry"))
-        self.out.write(f"{rx:g} 0 0 {ry:g} {cx:g} {cy:g} e\n")
-        self.out.write("</path>\n")
+        return f"{rx:g} 0 0 {ry:g} {cx:g} {cy:g} e\n"
 
     def node_line(self, n):
-        self.out.write("<path")
-        m = parse_transform(n)
-        if m:
-            self.out.write(f' matrix="{m}"')
-        attr = self.parse_attributes(n)
-        self.write_pathattributes(attr)
-        self.out.write(">\n")
+        self.write_path(n, self.geometry_line(n))
+
+    def geometry_line(self, n):
         x1 = 0
         y1 = 0
         x2 = 0
@@ -1281,49 +1597,40 @@ class Svg:
             x2 = float(n.getAttribute("x2"))
         if n.hasAttribute("y2"):
             y2 = float(n.getAttribute("y2"))
-        self.out.write(f"{x1:g} {y1:g} m {x2:g} {y2:g} l\n")
-        self.out.write("</path>\n")
+        return f"{x1:g} {y1:g} m {x2:g} {y2:g} l\n"
 
     def node_polyline(self, n):
-        self.polygon(n, closed=False)
+        self.write_path(n, self.geometry_polyline(n))
 
     def node_polygon(self, n):
-        self.polygon(n, closed=True)
+        self.write_path(n, self.geometry_polygon(n))
 
-    def polygon(self, n, closed):
-        self.out.write("<path")
-        m = parse_transform(n)
-        if m:
-            self.out.write(f' matrix="{m}"')
-        attr = self.parse_attributes(n)
-        self.write_pathattributes(attr)
-        self.out.write(">\n")
+    def geometry_polyline(self, n):
+        return self.polygon_geometry(n, closed=False)
+
+    def geometry_polygon(self, n):
+        return self.polygon_geometry(n, closed=True)
+
+    def polygon_geometry(self, n, closed):
+        geometry = io.StringIO()
         d = parse_list(n.getAttribute("points"))
         op = "m"
         while d:
             x = float(d.pop(0))
             y = float(d.pop(0))
-            self.out.write(f"{x:g} {y:g} {op}\n")
+            geometry.write(f"{x:g} {y:g} {op}\n")
             op = "l"
         if closed:
-            self.out.write("h\n")
-        self.out.write("</path>\n")
+            geometry.write("h\n")
+        return geometry.getvalue()
 
     def node_path(self, n):
-        d = n.getAttribute("d")
-        if len(d) == 0:
-            # Empty paths crash ipe, filter them out
-            return
+        self.write_path(n, self.geometry_path(n))
 
-        self.out.write("<path")
-        m = parse_transform(n)
-        if m:
-            self.out.write(f' matrix="{m}"')
-        attr = self.parse_attributes(n)
-        self.write_pathattributes(attr)
-        self.out.write(">\n")
-        parse_path(self.out, d)
-        self.out.write("</path>\n")
+    def geometry_path(self, n):
+        geometry = io.StringIO()
+        parse_path(geometry, n.getAttribute("d"))
+        return geometry.getvalue()
 
 
 # --------------------------------------------------------------------
@@ -1333,12 +1640,6 @@ def parse_arguments():
     """parses command line arguments"""
     parser = argparse.ArgumentParser(
         description="convert SVG into Ipe files",
-        epilog="""
-              Supported SVG elements:
-                  path,image,rect,circle,ellipse,line,polygon,polyline
-              Supported SVG attributes:
-                  group,clipPath,linearGradient,radialGradient
-              """,
     )
 
     parser.add_argument(

@@ -8,9 +8,9 @@ with the Ipe drawing editor (http://ipe.otfried.org).
 svgtoipe.py
 -----------
 
-A script that converts an SVG figure to Ipe format. It cannot handle
-all SVG features (many SVG features are not supported by Ipe anyway),
-but it works for gradients.
+A script that converts an SVG figure to Ipe format.  It should work
+for most SVG files (some SVG features are not supported by Ipe),
+including gradients and opacity.
 
 
 ipepython

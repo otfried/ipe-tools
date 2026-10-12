@@ -61,6 +61,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 Changes
 =======
 
+ * 2026/10/13
+   Lots of improvements based on looking at the test suite:
+   Path operators are fixed, edge cases handled, gradients with
+   "object-bounding-box" semantics are implemented, <use> of
+   objects not defined in <defs> is implemented, and much more.
+
  * 2026/10/10
    Make code pass "ruff check" and no more warnings on Python 3.14.
    Support transparency in images.
