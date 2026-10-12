@@ -147,12 +147,10 @@ def parse_float(txt):
 
 
 def parse_opacity(txt):
-    if not txt:
+    if txt is None or txt == "":
         return None
-    m = int(10 * (float(txt) + 0.05))
-    if m == 0:
-        m = 1
-    return 10 * m
+    value = max(0.0, min(1.0, float(txt)))
+    return 10 * math.floor(10 * value + 0.5)
 
 
 def parse_list(string):
@@ -578,8 +576,8 @@ class Svg:
             ('<layout paper="%d %d" frame="%d %d" ' + 'origin="0 0" crop="no"/>\n')
             % (self.width, self.height, self.width, self.height)
         )
-        for t in range(10, 100, 10):
-            self.out.write(f'<opacity name="{t}%" value="0.{t}"/>\n')
+        for t in range(0, 100, 10):
+            self.out.write(f'<opacity name="{t}%" value="{t / 100:g}"/>\n')
         # set SVG defaults
         self.out.write('<pathstyle cap="0" join="0" fillrule="wind"/>\n')
         self.out.write("</ipestyle>\n")
@@ -689,10 +687,11 @@ class Svg:
             self.parse_node(n)
 
     def parse_node(self, node):
-        if (
-            node.tagName not in ("g", "a", "inkscape:clipboard")
-            and self.parse_attributes(node)["visibility"] in ("hidden", "collapse")
-        ):
+        if node.tagName not in (
+            "g",
+            "a",
+            "inkscape:clipboard",
+        ) and self.parse_attributes(node)["visibility"] in ("hidden", "collapse"):
             return
         node_name = "node_" + node.tagName.replace(":", "_")
         if hasattr(self, node_name):
@@ -896,9 +895,11 @@ class Svg:
             mat = re.match(r"url\(#([^)]+)\).*", fill)
             if mat:
                 grad = mat.group(1)
-                if grad in self.defs and isinstance(
-                    self.defs[grad], (LinearGradient, RadialGradient)
-                ) and self.defs[grad].stops:
+                if (
+                    grad in self.defs
+                    and isinstance(self.defs[grad], (LinearGradient, RadialGradient))
+                    and self.defs[grad].stops
+                ):
                     self.out.write(f' fill="1" gradient="g{grad}"')
                 else:
                     self.out.write(' fill="0"')
@@ -908,18 +909,19 @@ class Svg:
             fill = parse_color(fill)
             if fill:
                 self.out.write(' fill="{:g} {:g} {:g}"'.format(*fill))
-        opacity = parse_opacity(a["opacity"])
-        fill_opacity = parse_opacity(a["fill-opacity"])
-        stroke_opacity = parse_opacity(a["stroke-opacity"])
-        if fill and fill_opacity:
-            opacity = fill_opacity
-        if not fill and stroke and stroke_opacity:
-            opacity = stroke_opacity
-        if opacity and opacity != 100:
-            self.out.write(f' opacity="{opacity}%"')
+        opacity = float(a["opacity"] or "1")
+        fill_opacity = parse_opacity(opacity * float(a["fill-opacity"] or "1"))
+        stroke_opacity = parse_opacity(opacity * float(a["stroke-opacity"] or "1"))
+        if a["fill"] == "none" and stroke is None:
+            stroke_opacity = 0
+        if fill_opacity < 100:
+            self.out.write(f' opacity="{fill_opacity}%"')
+        if stroke_opacity < 100:
+            self.out.write(f' stroke-opacity="{stroke_opacity}%"')
         stroke_width = parse_float(a["stroke-width"])
-        if a["stroke-width"]:
-            self.out.write(f' pen="{stroke_width:g}"')
+        if stroke_width is None:
+            stroke_width = 1.0
+        self.out.write(f' pen="{stroke_width:g}"')
         if a["fill-rule"] == "nonzero":
             self.out.write(' fillrule="wind"')
         k = {"butt": 0, "round": 1, "square": 2}
@@ -1116,6 +1118,14 @@ class Svg:
 
         self.text = ""
         self.collect_text(t)
+        self.text = self.text.translate(
+            str.maketrans(
+                {
+                    "\\": r"$\backslash$",
+                    **{character: "\\" + character for character in "#$%&_^"},
+                }
+            )
+        )
 
         if "svg-families" in attributes:
             mapped_family = self.map_svg_font_families(attributes["svg-families"])
@@ -1131,7 +1141,7 @@ class Svg:
         if "weight" in attributes and attributes["weight"] == "bold":
             self.text = "\\bf{" + self.text + "}"
 
-        self.out.write(f">{self.text}</text>\n")
+        self.out.write(f">{escape(self.text)}</text>\n")
 
     def node_image(self, node):
         if not have_pil:
