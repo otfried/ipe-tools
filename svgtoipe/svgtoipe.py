@@ -24,7 +24,7 @@
 #
 # --------------------------------------------------------------------
 
-svgtoipe_version = "20261010"
+svgtoipe_version = "20261013"
 
 import argparse
 import base64
@@ -189,6 +189,15 @@ def parse_style(string):
             key, value = item.split(":")
             sdict[key.strip()] = value.strip()
     return sdict
+
+
+def property_value(n, name):
+    """Value of a presentation attribute; the style attribute takes precedence."""
+    if n.hasAttribute("style"):
+        value = parse_style(n.getAttribute("style")).get(name)
+        if value:
+            return value
+    return n.getAttribute(name)
 
 
 def parse_color_component(txt):
@@ -708,6 +717,10 @@ class Svg:
         self.defs = {}
         self.bbox_gradients = {}
         self.warned = set()
+        self.hidden_objects = []
+        self.filters = []
+        self.in_hidden = False
+        self.layers = True
         self.symbols = {}
         self.elements = {}
         self.active_uses = set()
@@ -841,9 +854,11 @@ class Svg:
 
         # the body goes first into a buffer: per-shape gradients are only known
         # after writing it, but the stylesheet must precede the page
+        self.layers = outmode == "file"
         out, self.out = self.out, io.StringIO()
         self.write_data()
         body, self.out = self.out.getvalue(), out
+        self.warn_filters()
 
         if outmode == "file":
             self.write_ipe_header()
@@ -852,6 +867,9 @@ class Svg:
                 self.out.write("<notes>")
                 self.out.write(escape(self.description))
                 self.out.write("</notes>\n")
+            if self.hidden_objects:
+                self.out.write('<layer name="alpha"/>\n<layer name="invisible"/>\n')
+                self.out.write('<view layers="alpha" active="alpha"/>\n')
         else:
             self.out.write('<ipeselection pos="0 0">\n')
 
@@ -869,6 +887,7 @@ class Svg:
         self.out.write(f'<group matrix="{m!s}">\n')
         self.parse_nodes(self.root)
         self.out.write("</group>\n")
+        self.out.writelines(self.hidden_objects)
 
     def parse_nodes(self, root):
         """parses recognized svg elements"""
@@ -881,7 +900,35 @@ class Svg:
 
             self.parse_node(n)
 
+    def is_display_none(self, n):
+        value = n.getAttribute("display")
+        if n.hasAttribute("style"):
+            value = parse_style(n.getAttribute("style")).get("display", value)
+        return value.strip() == "none"
+
+    def hide_node(self, node):
+        """Draws a display:none node on the invisible layer, as a top-level object."""
+        if not self.layers:
+            return
+        out, self.out = self.out, io.StringIO()
+        self.in_hidden = True
+        try:
+            self.parse_node(node)
+        finally:
+            self.in_hidden = False
+            body, self.out = self.out.getvalue(), out
+        if body.strip():
+            # the layer attribute is only allowed on top-level objects, so the
+            # transformations of the enclosing groups have to be repeated here
+            m = Matrix([1, 0, 0, -1, 0, self.paper[1]]) * self.attributes[-1]["matrix"]
+            self.hidden_objects.append(
+                f'<group layer="invisible" matrix="{m}">\n{body}</group>\n'
+            )
+
     def parse_node(self, node):
+        if not self.in_hidden and self.is_display_none(node):
+            self.hide_node(node)
+            return
         if node.tagName not in (
             "g",
             "a",
@@ -892,6 +939,9 @@ class Svg:
         if not hasattr(self, node_name):
             sys.stderr.write(f"Unhandled node: {node.tagName}\n")
             return
+        filter_value = property_value(node, "filter").strip()
+        if filter_value and filter_value != "none":
+            self.filters.append(filter_value)
         opened = self.open_clip_groups(node)
         getattr(self, node_name)(node)
         self.out.write("</group>\n" * opened)
@@ -1038,11 +1088,14 @@ class Svg:
         return (parse_transform(n) or Matrix(), geometry)
 
     def clip_reference(self, n):
-        if n.hasAttribute("style"):
-            ref = parse_style(n.getAttribute("style")).get("clip-path")
-            if ref:
-                return ref
-        return n.getAttribute("clip-path")
+        return property_value(n, "clip-path")
+
+    def warn_filters(self):
+        if self.filters:
+            self.warn_once(
+                f"Ignoring filters on {len(self.filters)} element(s), e.g. {self.filters[0]}:"
+                " filters are not supported, so the result will differ from an SVG viewer"
+            )
 
     def warn_once(self, message):
         if message not in self.warned:
