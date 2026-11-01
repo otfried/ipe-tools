@@ -17,8 +17,8 @@ def create_ipe(pdffile):
     outfile = outfile[:-4]
     
   outfile = "annotate-" + outfile + ".ipe"
-  doc = pdf.PdfFileReader(pdffile)
-  numPages = doc.numPages
+  doc = pdf.PdfReader(pdffile)
+  numPages = len(doc.pages)
   out = open(outfile, "w")
   out.write("""<ipe version="70205">
 <preamble>\\usepackage{graphicx}
@@ -30,7 +30,7 @@ def create_ipe(pdffile):
     out.write("""<page>
 <layer name="alpha"/>
 <layer name="pdf" edit="no"/>
-<text pos="0 0" layer="pdf">\includegraphics[page=%d]{%s}</text>
+<text pos="0 0" layer="pdf">\\includegraphics[page=%d]{%s}</text>
     </page>\n""" % (i+1, pdffile))
   out.write("</ipe>\n")
   out.close()
